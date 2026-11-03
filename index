@@ -55,8 +55,8 @@
 
   <!-- 相簿列表：根據你上載的圖片檔名修改或增減 -->
   <div class="gallery-container" id="lightgallery">
-    <a href="https://raw.githubusercontent.com/noreg714/my-photo-album/refs/heads/main/CEC41327-74A5-4698-BEE0-769FBCDDC45A.jpg" class="gallery-item">
-      <img src="https://raw.githubusercontent.com/noreg714/my-photo-album/refs/heads/main/CEC41327-74A5-4698-BEE0-769FBCDDC45A.jpg" alt="Photo 1" />
+    <a href="https://cdn.myportfolio.com/8dbe8680-2e62-483d-a4d4-575a8201de1f/8187ae22-a34e-4131-b01a-f4370a506d21_rw_1920.JPG?h=c327ef733efe351080f0a5e17db39d77" class="gallery-item">
+      <img src="https://cdn.myportfolio.com/8dbe8680-2e62-483d-a4d4-575a8201de1f/8187ae22-a34e-4131-b01a-f4370a506d21_rw_1920.JPG?h=c327ef733efe351080f0a5e17db39d77" alt="Photo 1" />
     </a>
     <a href="https://raw.githubusercontent.com/noreg714/my-photo-album/refs/heads/main/CEC41327-74A5-4698-BEE0-769FBCDDC45A.jpg" class="gallery-item">
       <img src="https://raw.githubusercontent.com/noreg714/my-photo-album/refs/heads/main/CEC41327-74A5-4698-BEE0-769FBCDDC45A.jpg" alt="Photo 2" />
