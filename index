@@ -55,14 +55,14 @@
 
   <!-- 相簿列表：根據你上載的圖片檔名修改或增減 -->
   <div class="gallery-container" id="lightgallery">
-    <a href="1.jpg" class="gallery-item">
-      <img src="1.jpg" alt="Photo 1" />
+    <a href="https://raw.githubusercontent.com/noreg714/my-photo-album/refs/heads/main/CEC41327-74A5-4698-BEE0-769FBCDDC45A.jpg" class="gallery-item">
+      <img src="https://raw.githubusercontent.com/noreg714/my-photo-album/refs/heads/main/CEC41327-74A5-4698-BEE0-769FBCDDC45A.jpg" alt="Photo 1" />
     </a>
-    <a href="2.jpg" class="gallery-item">
-      <img src="2.jpg" alt="Photo 2" />
+    <a href="https://raw.githubusercontent.com/noreg714/my-photo-album/refs/heads/main/CEC41327-74A5-4698-BEE0-769FBCDDC45A.jpg" class="gallery-item">
+      <img src="https://raw.githubusercontent.com/noreg714/my-photo-album/refs/heads/main/CEC41327-74A5-4698-BEE0-769FBCDDC45A.jpg" alt="Photo 2" />
     </a>
-    <a href="3.jpg" class="gallery-item">
-      <img src="3.jpg" alt="Photo 3" />
+    <a href="https://raw.githubusercontent.com/noreg714/my-photo-album/refs/heads/main/CEC41327-74A5-4698-BEE0-769FBCDDC45A.jpg" class="gallery-item">
+      <img src="https://raw.githubusercontent.com/noreg714/my-photo-album/refs/heads/main/CEC41327-74A5-4698-BEE0-769FBCDDC45A.jpg" alt="Photo 3" />
     </a>
   </div>
 
