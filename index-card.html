@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="zh-HK" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE MA COLLECTION 2004–2026 | Archival Card Unboxing</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- html2canvas for card export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <!-- Google Fonts: Playfair Display + Montserrat -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;900&family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        galleryDark: '#0c0d0e',
+                        gallerySurface: '#141619',
+                        galleryCard: '#181a1f',
+                        goldAccent: '#d4af37',
+                        goldLight: '#f3e5ab',
+                        creamWhite: '#f5f4ed',
+                    },
+                    fontFamily: {
+                        serifTitle: ['Playfair Display', 'Georgia', 'serif'],
+                        sansClean: ['Montserrat', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0c0d0e;
+            color: #f5f4ed;
+            font-family: 'Montserrat', sans-serif;
+            overflow-x: hidden;
+            user-select: none;
+            letter-spacing: 0.05em;
+        }
+
+        /* Luxury Archival Foil Pack */
+        .ma-foil-pack {
+            background: linear-gradient(145deg, #181a1f 0%, #111215 40%, #1c1f26 100%);
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.95), 0 0 35px rgba(212, 175, 55, 0.15);
+            transform-style: preserve-3d;
+            transition: transform 0.5s cubic-bezier(0.165, 0.84, 0.44, 1), box-shadow 0.5s ease;
+        }
+
+        .ma-foil-pack::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                125deg,
+                transparent 15%,
+                rgba(255, 255, 255, 0.03) 30%,
+                rgba(212, 175, 55, 0.2) 48%,
+                rgba(243, 229, 171, 0.25) 52%,
+                rgba(212, 175, 55, 0.15) 55%,
+                transparent 85%
+            );
+            background-size: 250% 250%;
+            animation: foilShimmer 7s infinite linear;
+            pointer-events: none;
+            mix-blend-mode: color-dodge;
+            z-index: 5;
+        }
+
+        @keyframes foilShimmer {
+            0% { background-position: 0% 0%; }
+            50% { background-position: 100% 100%; }
+            100% { background-position: 0% 0%; }
+        }
+
+        .ma-foil-pack:hover {
+            transform: translateY(-10px) rotateX(4deg) rotateY(-3deg) scale(1.02);
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.98), 0 0 50px rgba(212, 175, 55, 0.3);
+        }
+
+        /* Gold Geometric Frame Borders */
+        .gold-border-frame {
+            position: relative;
+        }
+        .gold-border-frame::after {
+            content: '';
+            position: absolute;
+            inset: 6px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            pointer-events: none;
+        }
+
+        /* Archival Photo Card Styling */
+        .archival-card {
+            background: #141619;
+            border: 1px solid rgba(212, 175, 55, 0.25);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+            border-radius: 4px;
+            transform-style: preserve-3d;
+            transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), box-shadow 0.4s ease;
+        }
+
+        .archival-card:hover {
+            border-color: rgba(212, 175, 55, 0.7);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.95), 0 0 30px rgba(212, 175, 55, 0.25);
+        }
+
+        /* 3D Card Flip Styling for Modal */
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-style: preserve-3d;
+        }
+
+        .flip-card-inner.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            inset: 0;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 4px;
+        }
+
+        .flip-card-back {
+            transform: rotateY(180deg);
+            background: #141619;
+            border: 1px solid rgba(212, 175, 55, 0.4);
+        }
+
+        /* Gacha Pack Opening Animations */
+        @keyframes packShakeCharge {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            20% { transform: translate(-3px, 2px) rotate(-1deg) scale(1.02); }
+            40% { transform: translate(4px, -2px) rotate(1.5deg) scale(1.04); }
+            60% { transform: translate(-5px, 3px) rotate(-2deg) scale(1.06); filter: brightness(1.3); }
+            80% { transform: translate(6px, -3px) rotate(2deg) scale(1.08); filter: brightness(1.7); }
+            90% { transform: translate(0, 0) scale(1.12); filter: brightness(2.5); }
+        }
+
+        .animate-charge {
+            animation: packShakeCharge 1.1s forwards ease-in-out;
+        }
+
+        @keyframes tearTopFlyOff {
+            0% { transform: translateY(0) rotateX(0deg); opacity: 1; }
+            100% { transform: translateY(-350px) rotateX(75deg) rotateZ(-20deg) scale(0.5); opacity: 0; }
+        }
+
+        .animate-tear-off {
+            animation: tearTopFlyOff 0.8s forwards cubic-bezier(0.1, 0.9, 0.2, 1);
+        }
+
+        @keyframes flashGold {
+            0% { opacity: 0; }
+            35% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        .animate-gold-flash {
+            animation: flashGold 0.9s forwards ease-out;
+        }
+
+        /* Fixed Burst Out Animation for Card Gallery Entry */
+        @keyframes burstOut {
+            0% {
+                opacity: 0;
+                transform: translateY(60px) scale(0.8) rotateX(20deg);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1) rotateX(0deg);
+            }
+        }
+
+        /* Particle Canvas */
+        #particleCanvas {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 40;
+        }
+
+        /* Ambient Glow Pulse */
+        @keyframes ambientPulse {
+            0%, 100% { opacity: 0.25; }
+            50% { opacity: 0.5; }
+        }
+
+        .ambient-bg {
+            animation: ambientPulse 6s infinite ease-in-out;
+        }
+
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0c0d0e;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #272a30;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between relative bg-galleryDark text-creamWhite selection:bg-goldAccent selection:text-galleryDark">
+
+    <!-- Particle Overlay Canvas -->
+    <canvas id="particleCanvas"></canvas>
+
+    <!-- Gold Explosion Flash Overlay -->
+    <div id="goldFlashOverlay" class="fixed inset-0 bg-gradient-to-t from-amber-200 via-amber-400 to-amber-100 z-50 pointer-events-none opacity-0"></div>
+
+    <!-- Ambient Subtle Background Lights -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div class="ambient-bg absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-amber-600/10 rounded-full blur-[120px]"></div>
+    </div>
+
+    <!-- Header Navigation -->
+    <header class="relative z-10 px-8 py-6 flex flex-col md:flex-row justify-between items-center border-b border-gray-800/80 backdrop-blur-md bg-galleryDark/80 gap-4">
+        <div class="text-center md:text-left">
+            <span class="text-[10px] tracking-[0.3em] uppercase text-goldAccent font-semibold block mb-0.5">ARCHIVAL PHOTOGRAPHY COLLECTION</span>
+            <h1 class="font-serifTitle text-xl md:text-2xl font-bold tracking-[0.15em] text-creamWhite">THE MA COLLECTION 2004–2026</h1>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <button id="resetAppBtn" class="hidden text-xs tracking-widest px-5 py-2.5 rounded-sm border border-goldAccent/40 hover:border-goldAccent text-goldLight hover:bg-goldAccent/10 transition-all font-medium uppercase">
+                <i class="fa-solid fa-rotate-left mr-2"></i>RE-PACK
+            </button>
+            <button id="openEditModalBtn" class="hidden text-xs tracking-widest px-5 py-2.5 rounded-sm bg-goldAccent/15 text-goldLight border border-goldAccent/40 hover:bg-goldAccent/25 transition-all font-medium uppercase">
+                <i class="fa-solid fa-pen-to-square mr-2"></i>EDIT CARDS
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace Area -->
+    <main class="relative z-10 flex-grow flex flex-col items-center justify-center px-4 py-8">
+
+        <!-- STAGE 1: ARCHIVAL PACK VIEW -->
+        <div id="packStage" class="flex flex-col items-center justify-center text-center max-w-lg w-full my-auto transition-all duration-700">
+            
+            <p class="text-[10px] tracking-[0.35em] text-goldAccent uppercase font-bold mb-3">★ SPECIAL 22-YEAR ANNIVERSARY PACK ★</p>
+            <h2 class="font-serifTitle text-3xl md:text-4xl font-extrabold text-creamWhite mb-3 tracking-wide">2004–2026 MEMORY ARCHIVE</h2>
+            <p class="text-xs text-gray-400 max-w-sm font-light leading-relaxed mb-10 tracking-wider">Press & holding to unbox 5 curated archival photography cards capturing times, places, and thoughts.</p>
+
+            <!-- Foil Pack Graphic -->
+            <div id="maCardPack" class="ma-foil-pack gold-border-frame relative w-72 h-[430px] rounded-sm p-6 cursor-pointer flex flex-col justify-between overflow-hidden group select-none">
+                
+                <!-- Tear Seam Envelope Top Header -->
+                <div id="packTopEnvelope" class="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-gallerySurface via-galleryCard to-gallerySurface border-b border-goldAccent/50 p-4 z-20 transition-all">
+                    <div class="h-1 w-full bg-gradient-to-r from-transparent via-goldAccent to-transparent mb-3 opacity-70"></div>
+                    <div class="flex justify-between items-center text-[10px] text-goldAccent font-mono tracking-[0.2em] uppercase">
+                        <span><i class="fa-solid fa-scissors mr-1.5"></i> TEAR OPEN</span>
+                        <span class="border border-goldAccent/40 px-2 py-0.5">5 ARCHIVAL CARDS</span>
+                    </div>
+                </div>
+
+                <!-- Foil Pack Central Seal Artwork -->
+                <div class="my-auto pt-14 flex flex-col items-center relative z-10">
+                    <div class="w-20 h-20 rounded-full border border-goldAccent/60 flex items-center justify-center bg-gradient-to-tr from-goldAccent/10 via-amber-500/10 to-transparent mb-4 shadow-xl shadow-goldAccent/10 group-hover:scale-105 transition-transform duration-500">
+                        <span class="font-serifTitle text-2xl font-bold text-goldLight tracking-tighter">MA</span>
+                    </div>
+                    <h3 class="font-serifTitle text-xl font-bold text-creamWhite tracking-[0.2em]">THE MA COLLECTION</h3>
+                    <span class="text-[9px] text-goldAccent/80 font-mono mt-1 tracking-[0.3em] uppercase">ARCHIVE SERIES 2004–2026</span>
+                </div>
+
+                <!-- Foil Pack Bottom Info -->
+                <div class="border-t border-goldAccent/30 pt-3 flex justify-between items-end text-xs text-gray-400 relative z-10">
+                    <span class="text-[9px] tracking-widest text-goldAccent font-mono uppercase">LIMITED EDITION</span>
+                    <span class="text-[9px] font-mono text-gray-500">VOL. 01 / 22 YRS</span>
+                </div>
+            </div>
+
+            <!-- Action Button -->
+            <button id="openPackTriggerBtn" class="mt-10 px-10 py-4 rounded-sm bg-gradient-to-r from-goldAccent via-yellow-200 to-goldAccent text-galleryDark font-bold text-xs tracking-[0.25em] shadow-2xl shadow-goldAccent/20 hover:shadow-goldAccent/40 hover:scale-105 active:scale-95 transition-all flex items-center gap-3 uppercase">
+                <i class="fa-solid fa-box-open text-sm"></i>
+                UNBOX ARCHIVE PACK
+            </button>
+        </div>
+
+        <!-- STAGE 2: CARDS GALLERY / FAN LAYOUT -->
+        <div id="cardsGalleryStage" class="hidden w-full max-w-7xl flex-col items-center justify-center transition-all duration-700 my-auto">
+            
+            <div class="text-center mb-8">
+                <span class="text-[10px] tracking-[0.3em] font-mono text-goldAccent uppercase bg-goldAccent/10 px-4 py-1 border border-goldAccent/30">UNBOXING COMPLETE</span>
+                <h2 class="font-serifTitle text-2xl md:text-3xl font-bold text-creamWhite mt-3 tracking-widest">ARCHIVAL PHOTOGRAPHY CARDS</h2>
+                <p class="text-xs text-gray-400 mt-1 tracking-wider">Click any card to inspect full metadata & 3D flip card details</p>
+            </div>
+
+            <!-- Cards Grid Layout -->
+            <div id="cardsGridContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 w-full px-4">
+                <!-- Dynamic cards injected via JavaScript -->
+            </div>
+
+            <!-- Bottom Action Options -->
+            <div class="mt-12 flex flex-wrap justify-center gap-5">
+                <button id="reDrawPackBtn" class="px-8 py-3 rounded-sm bg-gallerySurface border border-gray-700 text-gray-300 text-xs tracking-widest hover:border-goldAccent hover:text-white transition-all uppercase">
+                    <i class="fa-solid fa-arrows-rotate mr-2"></i> UNBOX AGAIN
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- FULLSCREEN CARD INSPECTION MODAL (WITH 3D FLIP) -->
+    <div id="cardInspectModal" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="relative w-full max-w-4xl bg-gallerySurface border border-goldAccent/30 rounded-sm overflow-hidden shadow-2xl flex flex-col md:flex-row max-h-[90vh]">
+            
+            <!-- Close Modal Button -->
+            <button id="closeInspectModalBtn" class="absolute top-4 right-4 z-30 w-9 h-9 rounded-full bg-black/70 text-gray-400 hover:text-white border border-gray-700 flex items-center justify-center transition-all">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <!-- Modal Left: 3D Flip Card Container -->
+            <div class="w-full md:w-1/2 p-8 flex flex-col items-center justify-center bg-galleryDark/90 border-b md:border-b-0 md:border-r border-gray-800">
+                <div class="relative w-64 sm:w-72 h-[420px] cursor-pointer group" id="flipCardWrapper">
+                    <div id="flipCardInner" class="flip-card-inner">
+                        
+                        <!-- CARD FRONT -->
+                        <div class="flip-card-front archival-card gold-border-frame p-4 flex flex-col justify-between">
+                            <div class="relative w-full h-64 overflow-hidden border border-gray-800 mb-3">
+                                <img id="modalFrontPhoto" src="" alt="" class="w-full h-full object-cover">
+                                <span id="modalFrontYear" class="absolute top-2 left-2 text-[9px] font-mono font-bold bg-black/80 px-2 py-0.5 text-goldAccent border border-goldAccent/40">2012</span>
+                            </div>
+                            <div>
+                                <h4 id="modalFrontTitle" class="font-serifTitle text-base font-bold text-creamWhite">--</h4>
+                                <p id="modalFrontLocation" class="text-[11px] text-goldAccent font-mono mt-0.5">--</p>
+                            </div>
+                            <div class="text-[9px] font-mono text-gray-500 text-right uppercase tracking-widest">
+                                CLICK TO FLIP <i class="fa-solid fa-rotate-right ml-1"></i>
+                            </div>
+                        </div>
+
+                        <!-- CARD BACK (METADATA ARCHIVE) -->
+                        <div class="flip-card-back p-6 flex flex-col justify-between text-left">
+                            <div>
+                                <div class="border-b border-goldAccent/30 pb-3 mb-4">
+                                    <span class="text-[9px] font-mono tracking-[0.25em] text-goldAccent uppercase block">ARCHIVAL METADATA</span>
+                                    <h4 id="modalBackTitle" class="font-serifTitle text-lg font-bold text-creamWhite mt-1">--</h4>
+                                </div>
+
+                                <div class="space-y-3 font-mono text-xs text-gray-300">
+                                    <div>
+                                        <span class="text-[9px] text-gray-500 block uppercase">YEAR / ERA</span>
+                                        <p id="modalBackYear" class="text-goldLight font-bold">--</p>
+                                    </div>
+                                    <div>
+                                        <span class="text-[9px] text-gray-500 block uppercase">LOCATION / GPS</span>
+                                        <p id="modalBackGps" class="text-goldAccent">--</p>
+                                    </div>
+                                    <div>
+                                        <span class="text-[9px] text-gray-500 block uppercase">THOUGHT / QUOTE</span>
+                                        <p id="modalBackQuote" class="text-xs text-gray-300 italic font-sansClean leading-relaxed mt-1">"--"</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="text-[9px] font-mono text-gray-500 text-center uppercase tracking-widest border-t border-gray-800 pt-3">
+                                THE MA COLLECTION ARCHIVE • 2004–2026
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <p class="text-[10px] text-gray-500 font-mono mt-4 uppercase tracking-widest"><i class="fa-solid fa-hand-pointer mr-1"></i> CLICK CARD TO FLIP</p>
+            </div>
+
+            <!-- Modal Right: Metadata & Sharing Actions -->
+            <div class="w-full md:w-1/2 p-8 flex flex-col justify-between overflow-y-auto">
+                <div>
+                    <span class="text-[10px] font-mono tracking-[0.3em] text-goldAccent uppercase block mb-1">SELECTED ARCHIVAL ITEM</span>
+                    <h3 id="modalNameText" class="font-serifTitle text-2xl font-bold text-creamWhite mb-2">--</h3>
+                    
+                    <div class="flex items-center gap-2 text-xs text-goldAccent font-mono mb-6">
+                        <i class="fa-solid fa-location-dot"></i>
+                        <span id="modalLocationText">--</span>
+                    </div>
+
+                    <div class="p-4 rounded-sm bg-galleryDark border border-gray-800 mb-6">
+                        <span class="text-[10px] font-mono text-gray-500 uppercase block mb-1">ARCHIVAL THOUGHT</span>
+                        <p id="modalQuoteText" class="text-xs text-gray-300 font-sansClean italic leading-relaxed">"--"</p>
+                    </div>
+                </div>
+
+                <!-- Export & Sharing Controls -->
+                <div class="space-y-3 pt-6 border-t border-gray-800">
+                    <span class="text-[10px] font-mono tracking-[0.25em] text-gray-400 uppercase block mb-2">EXPORT & SHARE</span>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <button id="downloadCardImageBtn" class="px-4 py-3 rounded-sm bg-goldAccent/15 border border-goldAccent/40 text-goldLight text-xs tracking-wider hover:bg-goldAccent/25 transition-all flex items-center justify-center gap-2 uppercase">
+                            <i class="fa-solid fa-download"></i> DOWNLOAD
+                        </button>
+
+                        <button id="shareWhatsAppBtn" class="px-4 py-3 rounded-sm bg-emerald-950/40 border border-emerald-600/40 text-emerald-300 text-xs tracking-wider hover:bg-emerald-900/40 transition-all flex items-center justify-center gap-2 uppercase">
+                            <i class="fa-brands fa-whatsapp text-sm"></i> SHARE CARD IMAGE
+                        </button>
+                    </div>
+
+                    <button id="copyShareSummaryBtn" class="w-full py-3 rounded-sm bg-galleryDark border border-gray-700 text-gray-300 text-xs tracking-wider hover:border-goldAccent hover:text-white transition-all flex items-center justify-center gap-2 uppercase">
+                        <i class="fa-solid fa-copy"></i> COPY ARCHIVE SUMMARY
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- CARD EDIT MODAL -->
+    <div id="editCardsModal" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="relative w-full max-w-md bg-gallerySurface border border-goldAccent/40 rounded-sm p-6 shadow-2xl">
+            <button id="closeEditModalBtn" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <h3 class="font-serifTitle text-xl font-bold text-creamWhite mb-1 tracking-wider">ADD ARCHIVAL CARD</h3>
+            <p class="text-xs text-gray-400 font-mono mb-6">CUSTOMIZE NEW ARCHIVAL PHOTOGRAPHY ENTRY</p>
+
+            <form id="addCustomCardForm" class="space-y-4 text-xs font-mono">
+                <div>
+                    <label class="block text-gray-400 mb-1 uppercase">Title / Name</label>
+                    <input type="text" id="inputCardTitle" required placeholder="e.g. TOKYO MIDNIGHT" class="w-full bg-galleryDark border border-gray-700 rounded-sm px-3 py-2 text-creamWhite focus:outline-none focus:border-goldAccent">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-gray-400 mb-1 uppercase">Year (2004-2026)</label>
+                        <input type="text" id="inputCardYear" required placeholder="2018" class="w-full bg-galleryDark border border-gray-700 rounded-sm px-3 py-2 text-creamWhite focus:outline-none focus:border-goldAccent">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 mb-1 uppercase">Location</label>
+                        <input type="text" id="inputCardLocation" required placeholder="SHIBUYA, TOKYO" class="w-full bg-galleryDark border border-gray-700 rounded-sm px-3 py-2 text-creamWhite focus:outline-none focus:border-goldAccent">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-gray-400 mb-1 uppercase">Photo URL</label>
+                    <input type="url" id="inputCardPhoto" placeholder="https://images.unsplash.com/..." class="w-full bg-galleryDark border border-gray-700 rounded-sm px-3 py-2 text-creamWhite focus:outline-none focus:border-goldAccent">
+                </div>
+                <div>
+                    <label class="block text-gray-400 mb-1 uppercase">GPS Coordinates / Address</label>
+                    <input type="text" id="inputCardGps" placeholder="35.6595° N, 139.7004° E" class="w-full bg-galleryDark border border-gray-700 rounded-sm px-3 py-2 text-creamWhite focus:outline-none focus:border-goldAccent">
+                </div>
+                <div>
+                    <label class="block text-gray-400 mb-1 uppercase">Archival Quote / Thought</label>
+                    <textarea id="inputCardQuote" rows="3" required placeholder="Write a memory note..." class="w-full bg-galleryDark border border-gray-700 rounded-sm px-3 py-2 text-creamWhite focus:outline-none focus:border-goldAccent font-sansClean"></textarea>
+                </div>
+
+                <button type="submit" class="w-full py-3 bg-gradient-to-r from-goldAccent to-yellow-200 text-galleryDark font-bold tracking-widest rounded-sm hover:opacity-90 transition-opacity uppercase mt-2">
+                    ADD TO COLLECTION
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toastNotification" class="fixed bottom-6 right-6 z-50 bg-gallerySurface border border-goldAccent/40 text-goldLight text-xs font-mono px-5 py-3 rounded-sm shadow-2xl flex items-center gap-3 transform translate-y-20 opacity-0 transition-all duration-300">
+        <i class="fa-solid fa-circle-check text-goldAccent"></i>
+        <span id="toastMessageText">Action completed</span>
+    </div>
+
+    <!-- Footer -->
+    <footer class="relative z-10 py-6 text-center text-[10px] font-mono tracking-[0.25em] text-gray-600 border-t border-gray-800/60 uppercase">
+        THE MA COLLECTION © 2004–2026 • ARCHIVAL PHOTOGRAPHY GALLERY
+    </footer>
+
+    <!-- App JavaScript Engine -->
+    <script>
+        // Preset Archival Collection Data with high-availability Unsplash images
+        const maCollectionArchive = [
+            {
+                id: 'MA-2012-01',
+                title: 'VICTORIA HARBOUR SILHOUETTE',
+                year: '2012',
+                location: 'HONG KONG',
+                gps: '22.2936° N, 114.1710° E',
+                quote: 'The city skyline glimmers under midnight haze. Time stands still above the waters.',
+                photo: 'https://images.unsplash.com/photo-1506970845246-18f21d533b20?auto=format&fit=crop&w=800&q=80'
+            },
+            {
+                id: 'MA-2015-02',
+                title: 'HISTORIC TRAMWAY NOSTALGIA',
+                year: '2015',
+                location: 'CENTRAL, HONG KONG',
+                gps: '22.2819° N, 114.1581° E',
+                quote: 'Riding the vintage tram through Des Voeux Road. Endless urban rhythms.',
+                photo: 'https://images.unsplash.com/photo-1518684079-3c830dcef090?auto=format&fit=crop&w=800&q=80'
+            },
+            {
+                id: 'MA-2018-03',
+                title: 'TAIPEI MORNING LIGHT',
+                year: '2018',
+                location: 'TAIPEI, TAIWAN',
+                gps: '25.0330° N, 121.5654° E',
+                quote: 'Early sunlight filters through mountain fog, revealing quiet alleyways.',
+                photo: 'https://images.unsplash.com/photo-1536599018102-9f803c140fc1?auto=format&fit=crop&w=800&q=80'
+            },
+            {
+                id: 'MA-2021-04',
+                title: 'AFTERNOON COFFEE & SOLITUDE',
+                year: '2021',
+                location: 'SOHO, HONG KONG',
+                gps: '22.2831° N, 114.1528° E',
+                quote: 'A quiet corner cafe on Tai Ping Shan Street. Warm sunlight and dark roast.',
+                photo: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80'
+            },
+            {
+                id: 'MA-2024-05',
+                title: 'KENNEDY TOWN SUNSET SEASHORE',
+                year: '2024',
+                location: 'WESTERN DISTRICT, HK',
+                gps: '22.2839° N, 114.1287° E',
+                quote: 'Golden hour waves beating softly against the pier as the sun dips below islands.',
+                photo: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80'
+            }
+        ];
+
+        // Safe Fallback SVG Data URL in case image load fails
+        const SVG_IMAGE_FALLBACK = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600' viewBox='0 0 800 600'%3E%3Crect width='800' height='600' fill='%23141619'/%3E%3Crect x='10' y='10' width='780' height='580' fill='none' stroke='%23d4af37' stroke-width='2' opacity='0.4'/%3E%3Ctext x='50%25' y='48%25' dominant-baseline='middle' text-anchor='middle' font-family='Georgia, serif' font-size='28' fill='%23d4af37' font-weight='bold' letter-spacing='4'%3ETHE MA COLLECTION%3C/text%3E%3Ctext x='50%25' y='56%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='14' fill='%23f5f4ed' letter-spacing='2'%3EARCHIVAL PHOTOGRAPHY%3C/text%3E%3C/svg%3E";
+
+        let activeCardList = [...maCollectionArchive];
+        let currentlySelectedCard = null;
+
+        // Web Audio API Synthesizer (No external audio files required)
+        const WebAudioSynth = {
+            ctx: null,
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            },
+            playTearSound() {
+                this.init();
+                const bufferSize = this.ctx.sampleRate * 0.35;
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = buffer;
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(1000, this.ctx.currentTime);
+                filter.Q.setValueAtTime(2.5, this.ctx.currentTime);
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime(0.7, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.35);
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.ctx.destination);
+                noise.start();
+            },
+            playBurstSound() {
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(180, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(750, this.ctx.currentTime + 0.45);
+                gain.gain.setValueAtTime(0.85, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.7);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.7);
+            },
+            playSwooshSound(delay = 0) {
+                setTimeout(() => {
+                    this.init();
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(350, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(120, this.ctx.currentTime + 0.22);
+                    gain.gain.setValueAtTime(0.35, this.ctx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.22);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.22);
+                }, delay);
+            }
+        };
+
+        // DOM Elements
+        const packStage = document.getElementById('packStage');
+        const cardsGalleryStage = document.getElementById('cardsGalleryStage');
+        const maCardPack = document.getElementById('maCardPack');
+        const packTopEnvelope = document.getElementById('packTopEnvelope');
+        const openPackTriggerBtn = document.getElementById('openPackTriggerBtn');
+        const cardsGridContainer = document.getElementById('cardsGridContainer');
+        const goldFlashOverlay = document.getElementById('goldFlashOverlay');
+        const resetAppBtn = document.getElementById('resetAppBtn');
+        const openEditModalBtn = document.getElementById('openEditModalBtn');
+        const reDrawPackBtn = document.getElementById('reDrawPackBtn');
+
+        // Modal Elements
+        const cardInspectModal = document.getElementById('cardInspectModal');
+        const closeInspectModalBtn = document.getElementById('closeInspectModalBtn');
+        const flipCardWrapper = document.getElementById('flipCardWrapper');
+        const flipCardInner = document.getElementById('flipCardInner');
+        
+        const modalFrontPhoto = document.getElementById('modalFrontPhoto');
+        const modalFrontYear = document.getElementById('modalFrontYear');
+        const modalFrontTitle = document.getElementById('modalFrontTitle');
+        const modalFrontLocation = document.getElementById('modalFrontLocation');
+
+        const modalBackTitle = document.getElementById('modalBackTitle');
+        const modalBackYear = document.getElementById('modalBackYear');
+        const modalBackGps = document.getElementById('modalBackGps');
+        const modalBackQuote = document.getElementById('modalBackQuote');
+
+        const modalNameText = document.getElementById('modalNameText');
+        const modalLocationText = document.getElementById('modalLocationText');
+        const modalQuoteText = document.getElementById('modalQuoteText');
+
+        const downloadCardImageBtn = document.getElementById('downloadCardImageBtn');
+        const shareWhatsAppBtn = document.getElementById('shareWhatsAppBtn');
+        const copyShareSummaryBtn = document.getElementById('copyShareSummaryBtn');
+
+        // Edit Modal
+        const editCardsModal = document.getElementById('editCardsModal');
+        const closeEditModalBtn = document.getElementById('closeEditModalBtn');
+        const addCustomCardForm = document.getElementById('addCustomCardForm');
+
+        // Particle Canvas Controller
+        let particleList = [];
+        function initParticleEngine() {
+            const canvas = document.getElementById('particleCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+
+            function renderParticles() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particleList.forEach((p, index) => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.alpha -= p.decay;
+                    p.size *= 0.97;
+
+                    ctx.save();
+                    ctx.globalAlpha = Math.max(0, p.alpha);
+                    ctx.fillStyle = p.color;
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = p.color;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+
+                    if (p.alpha <= 0) particleList.splice(index, 1);
+                });
+                requestAnimationFrame(renderParticles);
+            }
+            renderParticles();
+        }
+
+        function triggerGoldParticleBurst(x, y, count = 50) {
+            const goldPalette = ['#d4af37', '#f3e5ab', '#ffffff', '#b38f28', '#fef3c7'];
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 11 + 3;
+                particleList.push({
+                    x: x,
+                    y: y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    size: Math.random() * 4 + 2,
+                    color: goldPalette[Math.floor(Math.random() * goldPalette.length)],
+                    alpha: 1,
+                    decay: Math.random() * 0.025 + 0.015
+                });
+            }
+        }
+
+        // Application Event Listeners
+        window.addEventListener('DOMContentLoaded', () => {
+            initParticleEngine();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            openPackTriggerBtn.addEventListener('click', startUnboxingSequence);
+            maCardPack.addEventListener('click', startUnboxingSequence);
+            reDrawPackBtn.addEventListener('click', resetToPackView);
+            resetAppBtn.addEventListener('click', resetToPackView);
+
+            closeInspectModalBtn.addEventListener('click', hideInspectModal);
+            flipCardWrapper.addEventListener('click', () => {
+                flipCardInner.classList.toggle('flipped');
+            });
+
+            downloadCardImageBtn.addEventListener('click', downloadCardCanvas);
+            shareWhatsAppBtn.addEventListener('click', shareToWhatsApp);
+            copyShareSummaryBtn.addEventListener('click', copySummaryToClipboard);
+
+            openEditModalBtn.addEventListener('click', () => editCardsModal.classList.remove('opacity-0', 'pointer-events-none'));
+            closeEditModalBtn.addEventListener('click', () => editCardsModal.classList.add('opacity-0', 'pointer-events-none'));
+
+            addCustomCardForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const newCard = {
+                    id: `MA-${document.getElementById('inputCardYear').value}-${Date.now().toString().slice(-2)}`,
+                    title: document.getElementById('inputCardTitle').value.toUpperCase(),
+                    year: document.getElementById('inputCardYear').value,
+                    location: document.getElementById('inputCardLocation').value.toUpperCase(),
+                    gps: document.getElementById('inputCardGps').value || '22.3193° N, 114.1694° E',
+                    quote: document.getElementById('inputCardQuote').value,
+                    photo: document.getElementById('inputCardPhoto').value || 'https://images.unsplash.com/photo-1518173946687-a4c8a383392e?auto=format&fit=crop&w=800&q=80'
+                };
+                activeCardList.unshift(newCard);
+                showToastNotification('CUSTOM ARCHIVAL CARD ADDED!');
+                editCardsModal.classList.add('opacity-0', 'pointer-events-none');
+                addCustomCardForm.reset();
+            });
+        }
+
+        // Unboxing 3-Stage Sequence
+        function startUnboxingSequence() {
+            openPackTriggerBtn.disabled = true;
+
+            // Audio: Tear zipper sound
+            WebAudioSynth.playTearSound();
+
+            // STAGE 1: Charge & Vibration Shake
+            maCardPack.classList.add('animate-charge');
+
+            setTimeout(() => {
+                // STAGE 2: Envelope Tear & Burst FX
+                const packRect = maCardPack.getBoundingClientRect();
+                triggerGoldParticleBurst(packRect.left + packRect.width / 2, packRect.top + 40, 70);
+
+                packTopEnvelope.classList.add('animate-tear-off');
+                WebAudioSynth.playBurstSound();
+
+                // Flash Overlay
+                goldFlashOverlay.classList.add('animate-gold-flash');
+
+                setTimeout(() => {
+                    // STAGE 3: Transition to Gallery Fan Layout
+                    packStage.classList.add('opacity-0', 'scale-90');
+
+                    setTimeout(() => {
+                        packStage.classList.add('hidden');
+                        cardsGalleryStage.classList.remove('hidden');
+                        cardsGalleryStage.classList.remove('opacity-0');
+
+                        renderCardsGallery();
+
+                        resetAppBtn.classList.remove('hidden');
+                        openEditModalBtn.classList.remove('hidden');
+                        maCardPack.classList.remove('animate-charge');
+                    }, 400);
+
+                }, 400);
+
+            }, 750);
+        }
+
+        // Render Cards Gallery
+        function renderCardsGallery() {
+            cardsGridContainer.innerHTML = '';
+            const displayCards = activeCardList.slice(0, 5);
+
+            displayCards.forEach((card, index) => {
+                const cardEl = createArchivalCardElement(card, index);
+                cardsGridContainer.appendChild(cardEl);
+
+                // Play card swoosh audio
+                WebAudioSynth.playSwooshSound(index * 110);
+
+                // Add 3D Tilt interaction
+                bind3DTilt(cardEl);
+            });
+        }
+
+        function createArchivalCardElement(card, index) {
+            const cardWrapper = document.createElement('div');
+            cardWrapper.className = `archival-card gold-border-frame p-4 cursor-pointer flex flex-col justify-between transition-all duration-500 group relative z-10`;
+            
+            // Set explicit animation timing to guarantee rendering
+            cardWrapper.style.animation = `burstOut 0.6s cubic-bezier(0.165, 0.84, 0.44, 1) ${index * 0.12}s both`;
+
+            cardWrapper.innerHTML = `
+                <div class="flex flex-col h-full justify-between">
+                    <div>
+                        <div class="relative w-full h-52 bg-galleryDark overflow-hidden mb-3 border border-gray-800/80">
+                            <img src="${card.photo}" alt="${card.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" onerror="this.onerror=null; this.src='${SVG_IMAGE_FALLBACK}';">
+                            <span class="absolute top-2 left-2 text-[9px] font-mono font-bold bg-black/80 px-2 py-0.5 text-goldAccent border border-goldAccent/30">${card.year}</span>
+                        </div>
+
+                        <h3 class="font-serifTitle text-sm font-bold text-creamWhite group-hover:text-goldLight transition-colors tracking-wide leading-snug">${card.title}</h3>
+                        <p class="text-[10px] text-goldAccent font-mono mt-1"><i class="fa-solid fa-location-dot mr-1"></i>${card.location}</p>
+                        <p class="text-xs text-gray-400 font-sansClean italic mt-2 line-clamp-2 leading-relaxed">"${card.quote}"</p>
+                    </div>
+
+                    <div class="mt-4 pt-2 border-t border-gray-800/60 flex justify-between items-center text-[9px] font-mono text-gray-500">
+                        <span>${card.id}</span>
+                        <span class="text-goldAccent opacity-80 group-hover:opacity-100 transition-opacity">INSPECT <i class="fa-solid fa-arrow-right ml-1"></i></span>
+                    </div>
+                </div>
+            `;
+
+            cardWrapper.addEventListener('click', () => showInspectModal(card));
+            return cardWrapper;
+        }
+
+        function bind3DTilt(cardElement) {
+            cardElement.addEventListener('mousemove', (e) => {
+                const rect = cardElement.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                const rotateX = ((y - centerY) / centerY) * -10;
+                const rotateY = ((x - centerX) / centerX) * 10;
+
+                cardElement.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+            });
+
+            cardElement.addEventListener('mouseleave', () => {
+                cardElement.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
+            });
+        }
+
+        // Modal Inspection Logic
+        function showInspectModal(card) {
+            currentlySelectedCard = card;
+
+            // Populate Front Card
+            modalFrontPhoto.src = card.photo;
+            modalFrontYear.innerText = card.year;
+            modalFrontTitle.innerText = card.title;
+            modalFrontLocation.innerText = card.location;
+
+            // Populate Back Card
+            modalBackTitle.innerText = card.title;
+            modalBackYear.innerText = `${card.year} ARCHIVE`;
+            modalBackGps.innerText = card.gps;
+            modalBackQuote.innerText = `"${card.quote}"`;
+
+            // Populate Details
+            modalNameText.innerText = card.title;
+            modalLocationText.innerText = `${card.location} (${card.gps})`;
+            modalQuoteText.innerText = `"${card.quote}"`;
+
+            flipCardInner.classList.remove('flipped');
+            cardInspectModal.classList.remove('opacity-0', 'pointer-events-none');
+        }
+
+        function hideInspectModal() {
+            cardInspectModal.classList.add('opacity-0', 'pointer-events-none');
+        }
+
+        function resetToPackView() {
+            cardsGalleryStage.classList.add('opacity-0');
+            setTimeout(() => {
+                cardsGalleryStage.classList.add('hidden');
+                packStage.classList.remove('hidden', 'opacity-0', 'scale-90');
+                packTopEnvelope.classList.remove('animate-tear-off');
+                goldFlashOverlay.classList.remove('animate-gold-flash');
+                openPackTriggerBtn.disabled = false;
+            }, 400);
+        }
+
+        // Export Actions
+        function downloadCardCanvas() {
+            if (!currentlySelectedCard) return;
+            showToastNotification('GENERATING HIGH-RES CARD PNG...');
+            const targetCard = document.querySelector('.flip-card-front');
+
+            html2canvas(targetCard, {
+                backgroundColor: '#0c0d0e',
+                scale: 3,
+                useCORS: true
+            }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const link = document.createElement('a');
+                link.href = imgData;
+                link.download = `MA_COLLECTION_${currentlySelectedCard.year}_${currentlySelectedCard.title}.png`;
+                link.click();
+                showToastNotification('CARD IMAGE DOWNLOADED!');
+            }).catch(err => {
+                console.error(err);
+                showToastNotification('FAILED TO EXPORT IMAGE');
+            });
+        }
+
+        async function shareToWhatsApp() {
+            if (!currentlySelectedCard) return;
+            showToastNotification('PREPARING CARD IMAGE FOR WHATSAPP...');
+            const targetCard = document.querySelector('.flip-card-front');
+
+            try {
+                // Render High-Res Card Image using html2canvas
+                const canvas = await html2canvas(targetCard, {
+                    backgroundColor: '#0c0d0e',
+                    scale: 3,
+                    useCORS: true
+                });
+
+                // Convert canvas to Blob image
+                canvas.toBlob(async (blob) => {
+                    if (!blob) {
+                        fallbackWhatsAppTextShare();
+                        return;
+                    }
+
+                    const fileName = `MA_CARD_${currentlySelectedCard.year}_${currentlySelectedCard.title.replace(/\s+/g, '_')}.png`;
+                    const cardFile = new File([blob], fileName, { type: 'image/png' });
+
+                    const shareText = `✨ THE MA COLLECTION ARCHIVE (${currentlySelectedCard.year}) ✨\n` +
+                                      `📷 ${currentlySelectedCard.title}\n` +
+                                      `📍 ${currentlySelectedCard.location}\n` +
+                                      `💬 "${currentlySelectedCard.quote}"\n\n` +
+                                      `https://noreg714.github.io/maxma-collection/`;
+
+                    // Try Native Web Share API with File payload (iOS / Android Safari & Chrome)
+                    if (navigator.share && navigator.canShare && navigator.canShare({ files: [cardFile] })) {
+                        try {
+                            await navigator.share({
+                                files: [cardFile],
+                                title: currentlySelectedCard.title,
+                                text: shareText
+                            });
+                            showToastNotification('CARD SHARED SUCCESSFULLY!');
+                        } catch (shareErr) {
+                            if (shareErr.name !== 'AbortError') {
+                                fallbackWhatsAppImageDownload(canvas, shareText, fileName);
+                            }
+                        }
+                    } else {
+                        fallbackWhatsAppImageDownload(canvas, shareText, fileName);
+                    }
+                }, 'image/png', 0.95);
+
+            } catch (err) {
+                console.error('Error generating card image:', err);
+                fallbackWhatsAppTextShare();
+            }
+        }
+
+        function fallbackWhatsAppImageDownload(canvas, shareText, fileName) {
+            const link = document.createElement('a');
+            link.href = canvas.toDataURL('image/png');
+            link.download = fileName;
+            link.click();
+
+            const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + "\n\n(Card PNG downloaded to your device)")}`;
+            window.open(waUrl, '_blank');
+            showToastNotification('CARD IMAGE DOWNLOADED & WHATSAPP OPENED');
+        }
+
+        function fallbackWhatsAppTextShare() {
+            const text = `✨ THE MA COLLECTION 2004–2026 ARCHIVE ✨\n\n` +
+                         `📷 ITEM: ${currentlySelectedCard.title} (${currentlySelectedCard.year})\n` +
+                         `📍 LOCATION: ${currentlySelectedCard.location}\n` +
+                         `📍 GPS: ${currentlySelectedCard.gps}\n` +
+                         `💬 THOUGHT: "${currentlySelectedCard.quote}"\n\n` +
+                         `Explore Collection: https://noreg714.github.io/maxma-collection/`;
+
+            const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+            window.open(url, '_blank');
+        }
+
+        function copySummaryToClipboard() {
+            if (!currentlySelectedCard) return;
+            const summary = `THE MA COLLECTION ARCHIVE: ${currentlySelectedCard.title} (${currentlySelectedCard.year}) | Location: ${currentlySelectedCard.location} | "${currentlySelectedCard.quote}"`;
+            const tempEl = document.createElement('textarea');
+            tempEl.value = summary;
+            document.body.appendChild(tempEl);
+            tempEl.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempEl);
+            showToastNotification('COPIED SUMMARY TO CLIPBOARD!');
+        }
+
+        function showToastNotification(msg) {
+            const toast = document.getElementById('toastNotification');
+            const toastText = document.getElementById('toastMessageText');
+            toastText.innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
