@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="zh-HK" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mindscapes &amp; Light — MAX MA COLLECTION | Landscape Photography</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              bg: '#0d0d0d',
+              surface: '#141414',
+              card: '#111111',
+              border: '#222222',
+              muted: '#888888',
+              gold: '#D4AF37'
+            }
+          },
+          fontFamily: {
+            serif: ['Cormorant Garamond', 'Georgia', 'serif'],
+            sans: ['Montserrat', 'Helvetica', 'Arial', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts: Cormorant Garamond & Montserrat -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Montserrat:ital,wght@0,200;0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- OpenCC-js for Traditional/Simplified Chinese Conversion -->
+  <script src="https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/full.js"></script>
+
+  <style>
+    body {
+      background-color: #0d0d0d;
+      color: #e6e6e6;
+      font-family: 'Montserrat', sans-serif;
+      overflow-x: hidden;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* Light Mode Overrides */
+    .light body {
+      background-color: #f7f7f7;
+      color: #1a1a1a;
+    }
+
+    .font-serif-title {
+      font-family: 'Cormorant Garamond', serif;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0d0d0d;
+    }
+    .light ::-webkit-scrollbar-track {
+      background: #f7f7f7;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #333333;
+      border-radius: 3px;
+    }
+    .light ::-webkit-scrollbar-thumb {
+      background: #cccccc;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #555555;
+    }
+    .light ::-webkit-scrollbar-thumb:hover {
+      background: #999999;
+    }
+
+    /* Glassmorphism Header (Scroll Active State with Smooth Border Transition) */
+    #site-header {
+      background: rgba(13, 13, 13, 0);
+      backdrop-filter: blur(0px);
+      -webkit-backdrop-filter: blur(0px);
+      border-bottom: 1px solid rgba(34, 34, 34, 0);
+      transition: background 0.3s ease, backdrop-filter 0.3s ease, border-color 0.3s ease;
+    }
+
+    #site-header.glass-nav {
+      background: rgba(13, 13, 13, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(34, 34, 34, 1);
+    }
+
+    .light #site-header.glass-nav {
+      background: rgba(247, 247, 247, 0.85);
+      border-bottom: 1px solid rgba(229, 229, 229, 1);
+    }
+  </style>
+</head>
+<body class="selection:bg-white selection:text-black">
+
+  <!-- Fixed Header Navigation -->
+  <header id="site-header" class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-6 md:px-12 py-6">
+    <div class="flex items-center space-x-3 w-1/2 md:w-1/4">
+      <span class="text-xs uppercase tracking-[0.3em] font-medium text-white [.light_&]:text-neutral-900" data-i18n="brand-name">MaxMa Collection</span>
+      <span class="text-[10px] text-neutral-400 [.light_&]:text-neutral-500 border border-neutral-700 [.light_&]:border-neutral-300 px-2 py-0.5 rounded-full hidden sm:inline-block">EDITION 2026</span>
+    </div>
+
+    <!-- Header Navigation Center (Desktop) -->
+    <nav class="hidden md:flex justify-center space-x-8 text-xs tracking-[0.2em] uppercase text-neutral-300 [.light_&]:text-neutral-700 w-2/4 text-center">
+      <a href="#hero" class="hover:text-white [.light_&]:hover:text-black transition-colors" data-i18n="nav-home">Home</a>
+      <a href="gallery.html" class="hover:text-white [.light_&]:hover:text-black transition-colors" data-i18n="nav-gallery">Gallery</a>
+      <a href="#perspectives" class="hover:text-white [.light_&]:hover:text-black transition-colors" data-i18n="nav-perspectives">Perspectives</a>
+      <a href="exhibition.html" class="hover:text-white [.light_&]:hover:text-black transition-colors" data-i18n="nav-exhibition">Virtual Space</a>
+    </nav>
+
+    <!-- Right Side Controls: Desktop Language & Theme Controls / Mobile Hamburger Button -->
+    <div class="flex justify-end items-center space-x-4 w-1/2 md:w-1/4">
+      <!-- Desktop EN | 繁 | 簡 Language Switcher -->
+      <div class="hidden md:flex items-center space-x-2 text-[10px] uppercase tracking-[0.15em] text-neutral-300 [.light_&]:text-neutral-700">
+        <button id="lang-en" onclick="setLanguage('en')" class="hover:text-white [.light_&]:hover:text-black transition-colors">EN</button>
+        <span class="text-neutral-600">/</span>
+        <button id="lang-tc" onclick="setLanguage('tc')" class="text-white [.light_&]:text-black font-medium transition-colors">繁</button>
+        <span class="text-neutral-600">/</span>
+        <button id="lang-sc" onclick="setLanguage('sc')" class="hover:text-white [.light_&]:hover:text-black transition-colors">简</button>
+      </div>
+
+      <!-- Desktop Black/White Mode Toggle Button -->
+      <button id="theme-toggle" onclick="toggleTheme()" class="hidden md:flex items-center justify-center w-8 h-8 rounded-full border border-neutral-700 [.light_&]:border-neutral-300 hover:border-white [.light_&]:hover:border-black text-neutral-300 [.light_&]:text-neutral-700 hover:text-white [.light_&]:hover:text-black transition-all duration-300" aria-label="Toggle Theme">
+        <i data-lucide="sun" id="sun-icon" class="w-3.5 h-3.5 hidden"></i>
+        <i data-lucide="moon" id="moon-icon" class="w-3.5 h-3.5 block"></i>
+      </button>
+
+      <!-- Mobile Hamburger Button (< 768px) -->
+      <button id="mobile-menu-btn" onclick="toggleMobileMenu()" class="md:hidden flex items-center justify-center w-8 h-8 text-neutral-300 [.light_&]:text-neutral-700 hover:text-white [.light_&]:hover:text-black transition-colors" aria-label="Open Menu">
+        <i data-lucide="menu" id="menu-icon" class="w-5 h-5 block"></i>
+        <i data-lucide="x" id="close-icon" class="w-5 h-5 hidden"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Mobile Menu Overlay (< 768px) -->
+  <div id="mobile-menu" class="fixed inset-0 bg-[#0d0d0d] [.light_&]:bg-[#f7f7f7] z-40 flex flex-col justify-center items-center space-y-8 text-sm uppercase tracking-[0.3em] text-neutral-300 [.light_&]:text-neutral-700 opacity-0 pointer-events-none transition-all duration-300 md:hidden">
+    <a href="#hero" onclick="toggleMobileMenu()" class="hover:text-white [.light_&]:hover:text-black transition-colors" data-i18n="nav-home">Home</a>
+    <a href="gallery.html" onclick="toggleMobileMenu()" class="hover:text-white [.light_&]:hover:text-black transition-colors" data-i18n="nav-gallery">Gallery</a>
+    <a href="#perspectives" onclick="toggleMobileMenu()" class="hover:text-white [.light_&]:hover:text-black transition-colors" data-i18n="nav-perspectives">Perspectives</a>
+    <a href="exhibition.html" onclick="toggleMobileMenu()" class="hover:text-white [.light_&]:hover:text-black transition-colors" data-i18n="nav-exhibition">Virtual Space</a>
+
+    <!-- 分隔線 -->
+    <div class="w-12 h-[1px] bg-neutral-800 [.light_&]:bg-neutral-300 my-2"></div>
+
+    <!-- 行動版語系切換 (EN / 繁 / 簡) -->
+    <div class="flex items-center space-x-3 text-xs tracking-[0.2em]">
+      <button id="mob-lang-en" onclick="setLanguage('en'); toggleMobileMenu();" class="hover:text-white [.light_&]:hover:text-black transition-colors">EN</button>
+      <span class="text-neutral-600">/</span>
+      <button id="mob-lang-tc" onclick="setLanguage('tc'); toggleMobileMenu();" class="text-white [.light_&]:text-black font-medium transition-colors">繁</button>
+      <span class="text-neutral-600">/</span>
+      <button id="mob-lang-sc" onclick="setLanguage('sc'); toggleMobileMenu();" class="hover:text-white [.light_&]:hover:text-black transition-colors">简</button>
+    </div>
+
+    <!-- 行動版黑白主題切換按鈕 -->
+    <button onclick="toggleTheme();" class="flex items-center space-x-2 text-xs tracking-[0.2em] text-neutral-400 hover:text-white [.light_&]:hover:text-black transition-colors pt-2">
+      <span id="mob-theme-dark" class="flex items-center space-x-2">
+        <i data-lucide="moon" class="w-4 h-4"></i>
+        <span class="text-[10px] uppercase">DARK MODE</span>
+      </span>
+      <span id="mob-theme-light" class="flex items-center space-x-2 hidden">
+        <i data-lucide="sun" class="w-4 h-4"></i>
+        <span class="text-[10px] uppercase">LIGHT MODE</span>
+      </span>
+    </button>
+  </div>
+
+  <!-- 1. Hero Container (Video Banner) -->
+  <section id="hero" class="hero-container relative w-full h-screen overflow-hidden flex justify-center items-center">
+    
+    <!-- Layer 01: Background Video with Parallax -->
+    <div class="hero-bg absolute top-0 left-0 w-full h-[125%] will-change-transform z-10">
+      <video autoplay loop muted playsinline class="w-full h-full object-cover brightness-[0.55] contrast-[1.1]">
+        <source src="https://noreg714.github.io/maxma-collection/img/bg-img/maxma-video.mp4" type="video/mp4">
+      </video>
+    </div>
+
+    <!-- Vignette & Gradient Overlays -->
+    <div class="absolute inset-0 bg-gradient-to-t from-[#0d0d0d] via-transparent to-black/40 z-10 pointer-events-none"></div>
+
+    <!-- Layer 02: Typography Overlay (Hero Title Centered) -->
+    <div class="hero-content relative z-20 text-center max-w-4xl px-6 flex flex-col items-center">
+      
+      <div class="overflow-hidden mb-4">
+        <p class="hero-subtitle text-xs md:text-sm font-light tracking-[0.35em] uppercase text-neutral-300 translate-y-full opacity-0 text-center" data-i18n="hero-sub">
+          Editorial Collection — 2026
+        </p>
+      </div>
+
+      <div class="overflow-hidden mb-6">
+        <h1 class="hero-title font-serif-title text-4xl sm:text-6xl md:text-8xl font-normal leading-[1.05] tracking-tight text-white translate-y-full opacity-0 text-center" data-i18n="hero-title">
+          Mindscapes &amp; Light
+        </h1>
+      </div>
+
+      <div class="overflow-hidden max-w-lg mb-8">
+        <p class="hero-description text-xs sm:text-sm font-light leading-relaxed text-neutral-300 tracking-wide translate-y-full opacity-0 text-center" data-i18n="hero-desc">
+          光如神明，雖不可見，卻能引領我們尋見萬物的存在。
+        </p>
+      </div>
+
+      <div class="hero-cta translate-y-8 opacity-0">
+        <a href="#gallery" class="inline-flex items-center space-x-3 text-xs uppercase tracking-[0.25em] text-white border border-white/30 px-6 py-3 rounded-full hover:bg-white hover:text-black transition-all duration-500 backdrop-blur-sm">
+          <span data-i18n="explore-btn">Explore Exhibition</span>
+          <i data-lucide="arrow-down-right" class="w-4 h-4"></i>
+        </a>
+      </div>
+    </div>
+
+    <!-- Interactive Scroll Down Indicator -->
+    <a href="#gallery" class="scroll-indicator absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-3 text-[10px] uppercase tracking-[0.3em] text-neutral-400 hover:text-white transition-colors">
+      <span data-i18n="scroll-discover">Scroll To Discover</span>
+      <div class="w-[1px] h-10 bg-gradient-to-b from-neutral-400 to-transparent animate-pulse"></div>
+    </a>
+  </section>
+
+  <!-- 2. Gallery Section -->
+  <section id="gallery" class="relative z-30 bg-[#0d0d0d] dark:bg-[#0d0d0d] [.light_&]:bg-[#f7f7f7] min-h-screen px-6 md:px-16 py-28 flex flex-col justify-center border-t border-neutral-900 transition-colors duration-300">
+    <div class="max-w-6xl mx-auto w-full">
+      
+      <!-- Section Header (CENTERED TITLE & DESCRIPTION) -->
+      <div class="flex flex-col items-center text-center mb-20">
+        <span class="text-xs uppercase tracking-[0.35em] text-neutral-500 block mb-3" data-i18n="sec1-tag">01 / Vision, Perspective &amp; The Craft</span>
+        <h2 class="font-serif-title text-3xl sm:text-5xl md:text-6xl font-light text-white [.light_&]:text-neutral-900 mb-6" data-i18n="sec1-title">The Camera Metaphor</h2>
+        <p class="text-xs sm:text-sm text-neutral-400 [.light_&]:text-neutral-600 max-w-xl leading-relaxed font-light text-center" data-i18n="sec1-desc">
+          人生就像一台相機：聚焦於重要的事物，捕捉美好的時光，從負片（挫折）中顯影成長；如果拍得不盡如人意，那就再試一次。
+        </p>
+      </div>
+
+      <!-- Photo Cards Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 mb-16">
+        
+        <!-- Card 1 -->
+        <div class="card-item group relative flex flex-col">
+          <div class="overflow-hidden rounded-lg mb-4 aspect-[4/5] bg-neutral-900 relative">
+            <img src="https://noreg714.github.io/maxma-collection/img/bg-img/Mountains-9.webp" 
+                 alt="Highland Mist" 
+                 class="w-full h-full object-cover brightness-50 contrast-125 transition-all duration-700 ease-out group-hover:brightness-105 group-hover:scale-110">
+          </div>
+          <span class="text-[10px] uppercase tracking-[0.2em] text-neutral-500 mb-1" data-i18n="card1-vol">Vol. 01 — Wilderness</span>
+          <h3 class="font-serif-title text-xl text-white [.light_&]:text-neutral-900 mb-2 transition-transform duration-300 group-hover:translate-x-1" data-i18n="card1-title">Mountains &amp; Lakes</h3>
+          <p class="text-xs text-neutral-400 [.light_&]:text-neutral-600 leading-relaxed font-light" data-i18n="card1-desc">山影與冰川湖水交融的紋理，紀錄極北荒原冷冽的光影節奏。</p>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="card-item group relative flex flex-col md:translate-y-12">
+          <div class="overflow-hidden rounded-lg mb-4 aspect-[4/5] bg-neutral-900 relative">
+            <img src="https://noreg714.github.io/maxma-collection/img/bg-img/Sunsets-10.webp" 
+                 alt="Alpine Ridgeline" 
+                 class="w-full h-full object-cover brightness-50 contrast-125 transition-all duration-700 ease-out group-hover:brightness-105 group-hover:scale-110">
+          </div>
+          <span class="text-[10px] uppercase tracking-[0.2em] text-neutral-500 mb-1" data-i18n="card2-vol">Vol. 02 — Solitude</span>
+          <h3 class="font-serif-title text-xl text-white [.light_&]:text-neutral-900 mb-2 transition-transform duration-300 group-hover:translate-x-1" data-i18n="card2-title">Golden Hour &amp; Sunsets</h3>
+          <p class="text-xs text-neutral-400 [.light_&]:text-neutral-600 leading-relaxed font-light" data-i18n="card2-desc">溫暖斜陽劃過地平線的瞬間，將山嶺與水面染上層次豐富的金黃餘暉。</p>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="card-item group relative flex flex-col">
+          <div class="overflow-hidden rounded-lg mb-4 aspect-[4/5] bg-neutral-900 relative">
+            <img src="https://noreg714.github.io/maxma-collection/img/bg-img/Culture-8.webp" 
+                 alt="Silence in Fog" 
+                 class="w-full h-full object-cover brightness-50 contrast-125 transition-all duration-700 ease-out group-hover:brightness-105 group-hover:scale-110">
+          </div>
+          <span class="text-[10px] uppercase tracking-[0.2em] text-neutral-500 mb-1" data-i18n="card3-vol">Vol. 03 — Silence</span>
+          <h3 class="font-serif-title text-xl text-white [.light_&]:text-neutral-900 mb-2 transition-transform duration-300 group-hover:translate-x-1" data-i18n="card3-title">Culture &amp; Heritage</h3>
+          <p class="text-xs text-neutral-400 [.light_&]:text-neutral-600 leading-relaxed font-light" data-i18n="card3-desc">穿過時光廊道的光影痕跡，靜靜紀錄下大地與文化交織的永恆篇章。</p>
+        </div>
+
+      </div>
+
+      <!-- Button Below Cards -->
+      <div class="flex justify-center mt-12">
+        <a href="gallery.html" class="inline-flex items-center space-x-3 text-xs uppercase tracking-[0.25em] text-neutral-300 [.light_&]:text-neutral-700 border border-neutral-700 [.light_&]:border-neutral-300 px-8 py-4 rounded-full hover:border-white hover:text-white [.light_&]:hover:border-neutral-900 [.light_&]:hover:text-black transition-all duration-300">
+          <span data-i18n="explore-all">Explore All Works</span>
+          <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 3. Quotes Slider Section -->
+  <section id="perspectives" class="relative z-30 bg-[#070707] [.light_&]:bg-[#eeeeee] py-32 px-6 md:px-16 border-t border-neutral-900 [.light_&]:border-neutral-200 transition-colors duration-300">
+    <div class="max-w-4xl mx-auto text-center flex flex-col items-center">
+      
+      <i data-lucide="quote" class="w-8 h-8 text-neutral-600 mb-8 opacity-60"></i>
+      
+      <!-- Slider Container -->
+      <div class="relative w-full min-h-[180px] flex items-center justify-center">
+        
+        <!-- Slide 1 -->
+        <div class="quote-slide absolute inset-0 transition-opacity duration-700 ease-in-out opacity-100 flex flex-col items-center justify-center">
+          <span class="text-[10px] uppercase tracking-[0.25em] text-neutral-400 mb-3 block" data-i18n="quote1-tag">[ Perception ]</span>
+          <blockquote class="font-serif-title text-2xl sm:text-4xl md:text-5xl font-light italic leading-snug text-neutral-200 [.light_&]:text-neutral-800 mb-6 text-center" data-i18n="quote1-text">
+            “We see with our brain, not with our eyes.”
+          </blockquote>
+          <cite class="text-xs uppercase tracking-[0.3em] text-neutral-500 font-normal not-italic">— Maximilian Ma</cite>
+        </div>
+
+        <!-- Slide 2 -->
+        <div class="quote-slide absolute inset-0 transition-opacity duration-700 ease-in-out opacity-0 pointer-events-none flex flex-col items-center justify-center">
+          <span class="text-[10px] uppercase tracking-[0.25em] text-neutral-400 mb-3 block" data-i18n="quote2-tag">[ Framing Perspective ]</span>
+          <blockquote class="font-serif-title text-2xl sm:text-4xl md:text-5xl font-light italic leading-snug text-neutral-200 [.light_&]:text-neutral-800 mb-6 text-center" data-i18n="quote2-text">
+            “A different point of view is simply the view from a place where you are not.”
+          </blockquote>
+          <cite class="text-xs uppercase tracking-[0.3em] text-neutral-500 font-normal not-italic">— Maximilian Ma</cite>
+        </div>
+
+        <!-- Slide 3 -->
+        <div class="quote-slide absolute inset-0 transition-opacity duration-700 ease-in-out opacity-0 pointer-events-none flex flex-col items-center justify-center">
+          <span class="text-[10px] uppercase tracking-[0.25em] text-neutral-400 mb-3 block" data-i18n="quote3-tag">[ Simplicity in Art ]</span>
+          <blockquote class="font-serif-title text-2xl sm:text-4xl md:text-5xl font-light italic leading-snug text-neutral-200 [.light_&]:text-neutral-800 mb-6 text-center" data-i18n="quote3-text">
+            “Creativity defeats complication with simplicity, overcomes fear with empowerment, and discovers order by achieving balance.”
+          </blockquote>
+          <cite class="text-xs uppercase tracking-[0.3em] text-neutral-500 font-normal not-italic">— Maximilian Ma</cite>
+        </div>
+
+      </div>
+
+      <!-- Slider Indicators (Dots) -->
+      <div class="flex space-x-3 mt-12 z-10">
+        <button onclick="goToSlide(0)" class="slide-dot w-2.5 h-2.5 rounded-full bg-white [.light_&]:bg-neutral-900 transition-all duration-300" aria-label="Slide 1"></button>
+        <button onclick="goToSlide(1)" class="slide-dot w-2.5 h-2.5 rounded-full bg-neutral-700 [.light_&]:bg-neutral-400 hover:bg-neutral-500 transition-all duration-300" aria-label="Slide 2"></button>
+        <button onclick="goToSlide(2)" class="slide-dot w-2.5 h-2.5 rounded-full bg-neutral-700 [.light_&]:bg-neutral-400 hover:bg-neutral-500 transition-all duration-300" aria-label="Slide 3"></button>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer id="contact" class="relative z-30 bg-black [.light_&]:bg-[#eaeaea] py-12 px-6 md:px-12 border-t border-neutral-900 [.light_&]:border-neutral-300 flex flex-col md:flex-row justify-between items-center text-neutral-500 text-xs transition-colors duration-300">
+    <div class="mb-4 md:mb-0 tracking-wider text-center md:text-left" data-i18n="footer-rights">
+      © 2026 MAX MA PHOTO COLLECTION. ALL RIGHTS RESERVED.
+    </div>
+    <div class="flex space-x-6 uppercase tracking-widest text-[10px]">
+      <a href="javascript:void(0);" class="hover:text-white [.light_&]:hover:text-black transition-colors">linkedin</a>
+    </div>
+  </footer>
+
+  <!-- GSAP & ScrollTrigger Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+  <script>
+    // Initialize Lucide Icons
+    lucide.createIcons();
+
+    // 1. Scroll-based Header Transparency Toggle (調低閥值至 5px，一向上拉就更快移除玻璃與邊框)
+    const siteHeader = document.getElementById('site-header');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 5) {
+        siteHeader.classList.add('glass-nav');
+      } else {
+        siteHeader.classList.remove('glass-nav');
+      }
+    });
+
+    // 2. Register GSAP Plugins
+    gsap.registerPlugin(ScrollTrigger);
+
+    window.addEventListener('load', () => {
+      
+      // 3. Initial Entrance Animation Timeline
+      const entranceTL = gsap.timeline();
+
+      entranceTL
+        .to('.hero-subtitle', {
+          y: 0,
+          opacity: 1,
+          duration: 1.2,
+          ease: 'power3.out',
+          delay: 0.2
+        })
+        .to('.hero-title', {
+          y: 0,
+          opacity: 1,
+          duration: 1.4,
+          ease: 'power3.out'
+        }, '-=0.9')
+        .to('.hero-description', {
+          y: 0,
+          opacity: 1,
+          duration: 1.2,
+          ease: 'power3.out'
+        }, '-=1.0')
+        .to('.hero-cta', {
+          y: 0,
+          opacity: 1,
+          duration: 1.0,
+          ease: 'power3.out'
+        }, '-=0.8');
+
+      // 4. Hero Parallax ScrollTrigger Dynamics
+      gsap.to('.hero-bg', {
+        yPercent: 25,
+        scale: 1.12,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: '.hero-container',
+          start: 'top top',
+          end: 'bottom top',
+          scrub: true
+        }
+      });
+
+      gsap.to('.hero-content', {
+        y: -100,
+        opacity: 0,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: '.hero-container',
+          start: 'top top',
+          end: '60% top',
+          scrub: true
+        }
+      });
+
+      gsap.to('.scroll-indicator', {
+        opacity: 0,
+        y: -20,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: '.hero-container',
+          start: 'top top',
+          end: '20% top',
+          scrub: true
+        }
+      });
+
+      // 5. Scroll Reveal Animation for Gallery Cards
+      gsap.utils.toArray('.card-item').forEach((card) => {
+        gsap.from(card, {
+          y: 60,
+          opacity: 0,
+          duration: 1.2,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: card,
+            start: 'top 85%',
+            toggleActions: 'play none none reverse'
+          }
+        });
+      });
+
+    });
+
+    // 6. Quote Slider Logic
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.quote-slide');
+    const dots = document.querySelectorAll('.slide-dot');
+
+    function goToSlide(index) {
+      slides[currentSlide].classList.add('opacity-0', 'pointer-events-none');
+      slides[currentSlide].classList.remove('opacity-100');
+      dots[currentSlide].classList.remove('bg-white', 'light:bg-neutral-900');
+      dots[currentSlide].classList.add('bg-neutral-700');
+
+      currentSlide = index;
+
+      slides[currentSlide].classList.remove('opacity-0', 'pointer-events-none');
+      slides[currentSlide].classList.add('opacity-100');
+      dots[currentSlide].classList.remove('bg-neutral-700');
+      dots[currentSlide].classList.add('bg-white');
+    }
+
+    // Auto rotate every 6 seconds
+    setInterval(() => {
+      const nextSlide = (currentSlide + 1) % slides.length;
+      goToSlide(nextSlide);
+    }, 6000);
+
+    // 7. Theme Toggle Logic (Black <-> White mode)
+    function toggleTheme() {
+      const htmlElement = document.documentElement;
+      const sunIcon = document.getElementById('sun-icon');
+      const moonIcon = document.getElementById('moon-icon');
+      const mobThemeDark = document.getElementById('mob-theme-dark');
+      const mobThemeLight = document.getElementById('mob-theme-light');
+
+      htmlElement.classList.toggle('light');
+      
+      const isLight = htmlElement.classList.contains('light');
+      
+      if (sunIcon && moonIcon) {
+        if (isLight) {
+          sunIcon.classList.remove('hidden');
+          sunIcon.classList.add('block');
+          moonIcon.classList.remove('block');
+          moonIcon.classList.add('hidden');
+        } else {
+          sunIcon.classList.remove('block');
+          sunIcon.classList.add('hidden');
+          moonIcon.classList.remove('hidden');
+          moonIcon.classList.add('block');
+        }
+      }
+
+      if (mobThemeDark && mobThemeLight) {
+        if (isLight) {
+          mobThemeDark.classList.add('hidden');
+          mobThemeLight.classList.remove('hidden');
+        } else {
+          mobThemeDark.classList.remove('hidden');
+          mobThemeLight.classList.add('hidden');
+        }
+      }
+      
+      lucide.createIcons();
+    }
+
+    // 8. Mobile Menu Toggle Logic (< 768px)
+    function toggleMobileMenu() {
+      const mobileMenu = document.getElementById('mobile-menu');
+      const menuIcon = document.getElementById('menu-icon');
+      const closeIcon = document.getElementById('close-icon');
+
+      const isOpen = mobileMenu.classList.contains('opacity-100');
+
+      if (isOpen) {
+        mobileMenu.classList.remove('opacity-100', 'pointer-events-auto');
+        mobileMenu.classList.add('opacity-0', 'pointer-events-none');
+        menuIcon.classList.remove('hidden');
+        menuIcon.classList.add('block');
+        closeIcon.classList.remove('block');
+        closeIcon.classList.add('hidden');
+        document.body.style.overflow = '';
+      } else {
+        mobileMenu.classList.remove('opacity-0', 'pointer-events-none');
+        mobileMenu.classList.add('opacity-100', 'pointer-events-auto');
+        menuIcon.classList.remove('block');
+        menuIcon.classList.add('hidden');
+        closeIcon.classList.remove('hidden');
+        closeIcon.classList.add('block');
+        document.body.style.overflow = 'hidden';
+      }
+      lucide.createIcons();
+    }
+
+    // 9. EN / 繁 / 簡 Translation Dictionary & Logic
+    const translations = {
+      en: {
+        "nav-home": "Home",
+        "nav-gallery": "Gallery",
+        "nav-perspectives": "Perspectives",
+        "nav-exhibition": "Exhibition",
+        "hero-sub": "Editorial Collection — 2026",
+        "hero-title": "Mindscapes & Light",
+        "hero-desc": "Light is like a deity—though invisible, it guides us to perceive the existence of all things.",
+        "explore-btn": "Explore Exhibition",
+        "scroll-discover": "Scroll To Discover",
+        "sec1-tag": "01 / Vision, Perspective & The Craft",
+        "sec1-title": "The Camera Metaphor",
+        "sec1-desc": "Life is like a camera: focus on what's important, capture the good times, develop from the negatives (setbacks); and if things don't turn out well, take another shot.",
+        "card1-vol": "Vol. 01 — Wilderness",
+        "card1-title": "Mountains & Lakes",
+        "card1-desc": "The intertwining textures of mountain shadows and glacial lakes, capturing the chilly light and shadow rhythm of the far northern wilderness.",
+        "card2-vol": "Vol. 02 — Solitude",
+        "card2-title": "Golden Hour & Sunsets",
+        "card2-desc": "The moment warm slanting sunlight crosses the horizon, painting the ridges and water surfaces with rich, layered golden afterglow.",
+        "card3-vol": "Vol. 03 — Silence",
+        "card3-title": "Culture & Heritage",
+        "card3-desc": "Traces of light and shadow passing through the corridor of time, quietly recording the eternal chapter where earth and culture intertwine.",
+        "explore-all": "Explore All Works",
+        "quote1-tag": "[ Perception ]",
+        "quote1-text": "“We see with our brain, not with our eyes.”",
+        "quote2-tag": "[ Framing Perspective ]",
+        "quote2-text": "“A different point of view is simply the view from a place where you are not.”",
+        "quote3-tag": "[ Simplicity in Art ]",
+        "quote3-text": "“Creativity defeats complication with simplicity, overcomes fear with empowerment, and discovers order by achieving balance.”",
+        "footer-rights": "© 2026 MAX MA PHOTO COLLECTION. ALL RIGHTS RESERVED."
+      },
+      tc: {
+        "nav-home": "Home",
+        "nav-gallery": "Gallery",
+        "nav-perspectives": "Perspectives",
+        "nav-exhibition": "Exhibition",
+        "hero-sub": "Editorial Collection — 2026",
+        "hero-title": "Mindscapes & Light",
+        "hero-desc": "光如神明，雖不可見，卻能引領我們尋見萬物的存在。",
+        "explore-btn": "Explore Exhibition",
+        "scroll-discover": "Scroll To Discover",
+        "sec1-tag": "01 / Vision, Perspective & The Craft",
+        "sec1-title": "The Camera Metaphor",
+        "sec1-desc": "人生就像一台相機：聚焦於重要的事物，捕捉美好的時光，從負片（挫折）中顯影成長；如果拍得不盡如人意，那就再試一次。",
+        "card1-vol": "Vol. 01 — Wilderness",
+        "card1-title": "Mountains & Lakes",
+        "card1-desc": "山影與冰川湖水交融的紋理，紀錄極北荒原冷冽的光影節奏。",
+        "card2-vol": "Vol. 02 — Solitude",
+        "card2-title": "Golden Hour & Sunsets",
+        "card2-desc": "溫暖斜陽劃過地平線的瞬間，將山嶺與水面染上層次豐富的金黃餘暉。",
+        "card3-vol": "Vol. 03 — Silence",
+        "card3-title": "Culture & Heritage",
+        "card3-desc": "穿過時光廊道的光影痕跡，靜靜紀錄下大地與文化交織的永恆篇章。",
+        "explore-all": "Explore All Works",
+        "quote1-tag": "[ Perception ]",
+        "quote1-text": "“We see with our brain, not with our eyes.”",
+        "quote2-tag": "[ Framing Perspective ]",
+        "quote2-text": "“A different point of view is simply the view from a place where you are not.”",
+        "quote3-tag": "[ Simplicity in Art ]",
+        "quote3-text": "“Creativity defeats complication with simplicity, overcomes fear with empowerment, and discovers order by achieving balance.”",
+        "footer-rights": "© 2026 MAX MA PHOTO COLLECTION. ALL RIGHTS RESERVED."
+      }
+    };
+
+    function setLanguage(lang) {
+      const btnEn = document.getElementById('lang-en');
+      const btnTc = document.getElementById('lang-tc');
+      const btnSc = document.getElementById('lang-sc');
+
+      const mobBtnEn = document.getElementById('mob-lang-en');
+      const mobBtnTc = document.getElementById('mob-lang-tc');
+      const mobBtnSc = document.getElementById('mob-lang-sc');
+
+      [btnEn, btnTc, btnSc, mobBtnEn, mobBtnTc, mobBtnSc].forEach(b => {
+        if (b) b.className = "hover:text-white [.light_&]:hover:text-black transition-colors";
+      });
+
+      if (lang === 'en') {
+        if (btnEn) btnEn.className = "text-white [.light_&]:text-black font-medium transition-colors";
+        if (mobBtnEn) mobBtnEn.className = "text-white [.light_&]:text-black font-medium transition-colors";
+        applyTranslations(translations.en);
+      } else if (lang === 'tc') {
+        if (btnTc) btnTc.className = "text-white [.light_&]:text-black font-medium transition-colors";
+        if (mobBtnTc) mobBtnTc.className = "text-white [.light_&]:text-black font-medium transition-colors";
+        applyTranslations(translations.tc);
+      } else if (lang === 'sc') {
+        if (btnSc) btnSc.className = "text-white [.light_&]:text-black font-medium transition-colors";
+        if (mobBtnSc) mobBtnSc.className = "text-white [.light_&]:text-black font-medium transition-colors";
+        
+        const converter = OpenCC.Converter({ from: 'hk', to: 'cn' });
+        const scDict = {};
+        for (let key in translations.tc) {
+          scDict[key] = converter(translations.tc[key]);
+        }
+        applyTranslations(scDict);
+      }
+    }
+
+    function applyTranslations(dict) {
+      const elements = document.querySelectorAll('[data-i18n]');
+      elements.forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (dict[key]) {
+          el.innerHTML = dict[key];
+        }
+      });
+    }
+  </script>
+</body>
+</html>

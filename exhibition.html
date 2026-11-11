@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="zh-HK" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Mindscapes &amp; Light — MAX MA COLLECTION | 數位光影藝廊</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              bg: '#2b231f',
+              surface: '#362c27',
+              card: '#322823',
+              border: '#4a3d36',
+              muted: '#b5a193',
+              gold: '#d4af37'
+            }
+          },
+          fontFamily: {
+            serif: ['Cormorant Garamond', 'Georgia', 'serif'],
+            sans: ['Montserrat', 'Helvetica', 'Arial', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts: Cormorant Garamond & Montserrat -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Montserrat:ital,wght@0,200;0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- OpenCC-js for Traditional/Simplified Chinese Conversion -->
+  <script src="https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/full.js"></script>
+
+  <!-- Three.js Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      font-family: 'Montserrat', sans-serif;
+      background-color: #2b231f;
+      color: #f4eee9;
+      user-select: none;
+      touch-action: none;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .light body {
+      background-color: #f5f0eb;
+      color: #38302a;
+    }
+
+    .font-serif-title {
+      font-family: 'Cormorant Garamond', serif;
+    }
+
+    #webgl-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      display: block;
+      z-index: 1;
+      touch-action: none;
+    }
+
+    /* 頂部與底部 UI 層級 */
+    .ui-layer {
+      position: relative;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .pointer-auto {
+      pointer-events: auto;
+    }
+
+    /* 導覽 HUD 動畫與玻璃質感 */
+    .glass-hud {
+      background: rgba(43, 35, 31, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(74, 61, 54, 1);
+      transition: background 0.3s ease, border-color 0.3s ease;
+    }
+
+    .light .glass-hud {
+      background: rgba(245, 240, 235, 0.85);
+      border: 1px solid rgba(222, 214, 206, 1);
+    }
+
+    /* 手機端隱藏捲軸 */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    .station-btn {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .station-btn.active {
+      background: #f4eee9;
+      color: #2b231f;
+      box-shadow: 0 0 15px rgba(244, 238, 233, 0.25);
+    }
+
+    .light .station-btn.active {
+      background: #38302a;
+      color: #f5f0eb;
+      box-shadow: 0 0 15px rgba(56, 48, 42, 0.15);
+    }
+
+    /* 自訂捲軸 */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(244, 238, 233, 0.2);
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body class="selection:bg-[#f4eee9] selection:text-[#2b231f]">
+
+  <!-- 3D WebGL Canvas 畫布 -->
+  <canvas id="webgl-canvas"></canvas>
+
+  <!-- 載入中動畫遮罩 -->
+  <div id="loading-overlay" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#2b231f] [.light_&]:bg-[#f5f0eb] transition-opacity duration-700">
+    <div class="w-12 h-12 border-2 border-[#736056] border-t-[#f4eee9] [.light_&]:border-[#c4b5a8] [.light_&]:border-t-[#38302a] rounded-full animate-spin mb-4"></div>
+    <h2 class="text-sm tracking-[0.3em] uppercase text-[#f4eee9] [.light_&]:text-[#38302a] font-medium" data-i18n="loadingTitle">Entering 3D Gallery Space...</h2>
+    <p class="text-xs tracking-[0.2em] uppercase text-[#b5a193] [.light_&]:text-[#7c6f64] mt-2" data-i18n="loadingSub">Loading 3D hall &amp; artworks</p>
+  </div>
+
+  <!-- 頂部標題 Header -->
+  <header class="ui-layer fixed top-0 left-0 w-full flex justify-between items-center px-6 md:px-12 py-6">
+    <div class="pointer-auto flex items-center space-x-3 sm:space-x-4">
+      <!-- 返回 Home Page 按鈕 -->
+      <a href="index.html" class="flex items-center justify-center space-x-1.5 px-3 py-1.5 rounded-full border border-[#4a3d36] [.light_&]:border-[#ded6ce] hover:border-[#f4eee9] [.light_&]:hover:border-[#38302a] text-[#b5a193] [.light_&]:text-[#7c6f64] hover:text-[#f4eee9] [.light_&]:hover:text-[#38302a] text-[10px] uppercase tracking-[0.15em] transition-all duration-300" title="返回主頁">
+        <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+        <span class="hidden sm:inline" data-i18n="backHome">Home</span>
+      </a>
+
+      <div class="h-4 w-[1px] bg-[#4a3d36] [.light_&]:bg-[#ded6ce]"></div>
+
+      <div class="flex items-center space-x-3">
+        <span class="text-xs uppercase tracking-[0.3em] font-medium text-[#f4eee9] [.light_&]:text-[#38302a]" data-i18n="brand-name">Virtual Space</span>
+        <span class="text-[10px] text-[#b5a193] [.light_&]:text-[#7c6f64] border border-[#4a3d36] [.light_&]:border-[#ded6ce] px-2 py-0.5 rounded-full hidden sm:inline-block uppercase tracking-[0.15em]" data-i18n="brand-sub">Max Ma Collection</span>
+      </div>
+    </div>
+
+    <!-- 右上角功能控制 -->
+    <div class="pointer-auto flex items-center space-x-3 sm:space-x-4">
+      <!-- 語言切換 (EN / 繁 / 簡) -->
+      <div class="flex items-center space-x-2 text-[10px] uppercase tracking-[0.15em] text-[#b5a193] [.light_&]:text-[#7c6f64]">
+        <button id="lang-en" onclick="setLanguage('en')" class="text-[#f4eee9] [.light_&]:text-[#38302a] font-medium transition-colors">EN</button>
+        <span class="text-[#736056] [.light_&]:text-[#b5a89e]">/</span>
+        <button id="lang-tc" onclick="setLanguage('tc')" class="hover:text-[#f4eee9] [.light_&]:hover:text-[#38302a] transition-colors">繁</button>
+        <span class="text-[#736056] [.light_&]:text-[#b5a89e]">/</span>
+        <button id="lang-sc" onclick="setLanguage('sc')" class="hover:text-[#f4eee9] [.light_&]:hover:text-[#38302a] transition-colors">简</button>
+      </div>
+
+      <!-- 燈光模式切換按鈕 -->
+      <button id="toggle-light-btn" class="flex items-center justify-center space-x-2 px-3 py-1.5 rounded-full border border-[#4a3d36] [.light_&]:border-[#ded6ce] hover:border-[#f4eee9] [.light_&]:hover:border-[#38302a] text-[#b5a193] [.light_&]:text-[#7c6f64] hover:text-[#f4eee9] [.light_&]:hover:text-[#38302a] text-[10px] uppercase tracking-[0.15em] transition-all duration-300" title="切換情調燈光">
+        <i data-lucide="sun" class="w-3.5 h-3.5"></i>
+        <span class="hidden sm:inline" id="light-btn-text" data-i18n="lightMood">Mood Glow</span>
+      </button>
+
+      <!-- 音效切換按鈕 -->
+      <button id="toggle-audio-btn" class="flex items-center justify-center space-x-2 px-3 py-1.5 rounded-full border border-[#4a3d36] [.light_&]:border-[#ded6ce] hover:border-[#f4eee9] [.light_&]:hover:border-[#38302a] text-[#b5a193] [.light_&]:text-[#7c6f64] hover:text-[#f4eee9] [.light_&]:hover:text-[#38302a] text-[10px] uppercase tracking-[0.15em] transition-all duration-300" title="背景情調音樂">
+        <i data-lucide="volume-x" id="audio-icon" class="w-3.5 h-3.5 text-[#b5a193]"></i>
+        <span class="hidden sm:inline" id="audio-text" data-i18n="audioOff">Audio: Off</span>
+      </button>
+
+      <!-- 黑白主題切換按鈕 -->
+      <button id="theme-toggle" onclick="toggleTheme()" class="flex items-center justify-center w-8 h-8 rounded-full border border-[#4a3d36] [.light_&]:border-[#ded6ce] hover:border-[#f4eee9] [.light_&]:hover:border-[#38302a] text-[#b5a193] [.light_&]:text-[#7c6f64] hover:text-[#f4eee9] [.light_&]:hover:text-[#38302a] transition-all duration-300" aria-label="Toggle Theme">
+        <i data-lucide="sun" id="sun-icon" class="w-3.5 h-3.5 hidden"></i>
+        <i data-lucide="moon" id="moon-icon" class="w-3.5 h-3.5 block"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- 底部 HUD 導覽系統 -->
+  <div class="ui-layer fixed bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 w-[92%] max-w-3xl">
+    <nav class="glass-hud p-2 rounded-full flex items-center justify-between shadow-2xl pointer-auto">
+      <div class="flex items-center space-x-1 w-full overflow-x-auto no-scrollbar py-0.5 px-1">
+        <button data-station="0" class="station-btn active shrink-0 min-w-[70px] sm:min-w-0 sm:flex-1 py-2 px-3.5 rounded-full text-[10px] sm:text-xs tracking-[0.15em] uppercase font-medium text-[#b5a193] [.light_&]:text-[#7c6f64] hover:text-[#f4eee9] [.light_&]:hover:text-[#38302a] flex items-center justify-center space-x-2">
+          <i data-lucide="mountain" class="w-3.5 h-3.5"></i>
+          <span id="nav-0" class="truncate" data-i18n="nav-0">Mountains</span>
+        </button>
+
+        <button data-station="1" class="station-btn shrink-0 min-w-[70px] sm:min-w-0 sm:flex-1 py-2 px-3.5 rounded-full text-[10px] sm:text-xs tracking-[0.15em] uppercase font-medium text-[#b5a193] [.light_&]:text-[#7c6f64] hover:text-[#f4eee9] [.light_&]:hover:text-[#38302a] flex items-center justify-center space-x-2">
+          <i data-lucide="sunset" class="w-3.5 h-3.5"></i>
+          <span id="nav-1" class="truncate" data-i18n="nav-1">Sunsets</span>
+        </button>
+
+        <button data-station="2" class="station-btn shrink-0 min-w-[70px] sm:min-w-0 sm:flex-1 py-2 px-3.5 rounded-full text-[10px] sm:text-xs tracking-[0.15em] uppercase font-medium text-[#b5a193] [.light_&]:text-[#7c6f64] hover:text-[#f4eee9] [.light_&]:hover:text-[#38302a] flex items-center justify-center space-x-2">
+          <i data-lucide="landmark" class="w-3.5 h-3.5"></i>
+          <span id="nav-2" class="truncate" data-i18n="nav-2">Culture</span>
+        </button>
+
+        <button data-station="3" class="station-btn shrink-0 min-w-[70px] sm:min-w-0 sm:flex-1 py-2 px-3.5 rounded-full text-[10px] sm:text-xs tracking-[0.15em] uppercase font-medium text-[#b5a193] [.light_&]:text-[#7c6f64] hover:text-[#f4eee9] [.light_&]:hover:text-[#38302a] flex items-center justify-center space-x-2">
+          <i data-lucide="trees" class="w-3.5 h-3.5"></i>
+          <span id="nav-3" class="truncate" data-i18n="nav-3">Forests</span>
+        </button>
+
+        <button data-station="4" class="station-btn shrink-0 min-w-[70px] sm:min-w-0 sm:flex-1 py-2 px-3.5 rounded-full text-[10px] sm:text-xs tracking-[0.15em] uppercase font-medium text-[#b5a193] [.light_&]:text-[#7c6f64] hover:text-[#f4eee9] [.light_&]:hover:text-[#38302a] flex items-center justify-center space-x-2">
+          <i data-lucide="waves" class="w-3.5 h-3.5"></i>
+          <span id="nav-4" class="truncate" data-i18n="nav-4">Cascades</span>
+        </button>
+      </div>
+
+      <div class="h-4 w-[1px] bg-[#4a3d36] [.light_&]:bg-[#ded6ce] mx-2 shrink-0"></div>
+
+      <button id="reset-cam-btn" class="p-2 rounded-full text-[#b5a193] [.light_&]:text-[#7c6f64] hover:text-[#f4eee9] [.light_&]:hover:text-[#38302a] transition-colors pointer-auto shrink-0" title="Focus Area">
+        <i data-lucide="crosshair" class="w-4 h-4"></i>
+      </button>
+    </nav>
+  </div>
+
+  <!-- 展品詳細資訊視窗 Modal -->
+  <div id="artwork-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#1a1412]/80 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-300">
+    <div id="modal-card" class="bg-[#322823] [.light_&]:bg-[#ffffff] border border-[#4a3d36] [.light_&]:border-[#ded6ce] w-full max-w-3xl rounded-2xl overflow-hidden shadow-2xl transition-transform duration-300 scale-95 flex flex-col md:flex-row">
+      
+      <!-- 相片大圖區 -->
+      <div class="w-full md:w-3/5 bg-[#251d19] [.light_&]:bg-[#f0f0f0] flex items-center justify-center p-4 min-h-[260px]">
+        <img id="modal-img" src="" alt="Artwork Detail" class="max-h-[60vh] object-contain rounded border border-[#4a3d36] [.light_&]:border-[#ded6ce] shadow-2xl">
+      </div>
+
+      <!-- 作品資訊區 -->
+      <div class="w-full md:w-2/5 p-6 flex flex-col justify-between border-t md:border-t-0 md:border-l border-[#4a3d36] [.light_&]:border-[#ded6ce]">
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <span id="modal-theme" class="text-[10px] uppercase tracking-[0.2em] font-medium text-[#b5a193] [.light_&]:text-[#7c6f64] bg-[#2b231f] [.light_&]:bg-[#f5f0eb] border border-[#4a3d36] [.light_&]:border-[#ded6ce] px-2.5 py-1 rounded-full flex items-center gap-1.5" data-i18n="modalThemeLabel">
+              <i data-lucide="layers" class="w-3 h-3"></i> <span>Theme Zone</span>
+            </span>
+            <button id="close-modal-btn" class="w-7 h-7 flex items-center justify-center rounded-full bg-[#2b231f] [.light_&]:bg-[#f5f0eb] text-[#b5a193] [.light_&]:text-[#7c6f64] hover:text-[#f4eee9] [.light_&]:hover:text-[#38302a] transition-colors">
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+          </div>
+          <h3 id="modal-title" class="font-serif-title text-2xl font-light text-[#f4eee9] [.light_&]:text-[#38302a] mb-3">作品名稱</h3>
+          <p id="modal-desc" class="text-xs text-[#b5a193] [.light_&]:text-[#7c6f64] leading-relaxed font-light">作品詳細介紹說明...</p>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-[#4a3d36] [.light_&]:border-[#ded6ce] flex items-center justify-between text-[10px] uppercase tracking-[0.15em] text-[#8c776c] [.light_&]:text-[#9c8e84]">
+          <span data-i18n="modalFrameTag">精緻展廳畫框作品</span>
+          <span class="flex items-center gap-1" data-i18n="modalStationTag"><i data-lucide="info" class="w-3 h-3"></i> 3D 展廳現場展出</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // 全域 3D 與控制變數
+    let scene, camera, renderer;
+    let targetCameraPos = new THREE.Vector3();
+    let targetLookAt = new THREE.Vector3();
+    let currentLookAt = new THREE.Vector3();
+    let interactiveObjects = [];
+    let currentStationIndex = 0;
+    let currentLang = 'en';
+
+    // 多語言文字庫 Dictionary
+    const translations = {
+      en: {
+        "backHome": "Home",
+        "brand-name": "Virtual Space",
+        "brand-sub": "Max Ma Collection",
+        "loadingTitle": "Entering 3D Gallery Space...",
+        "loadingSub": "Loading 3D hall & artworks",
+        "lightMood": "Mood Glow",
+        "lightHighlight": "Exhibition Light",
+        "audioOff": "Audio: Off",
+        "audioOn": "Audio: On",
+        "modalStationTag": "3D Hall Exhibition",
+        "modalThemeLabel": "Theme Zone",
+        "modalFrameTag": "Exhibition Frame Artwork",
+        "nav-0": "Mountains",
+        "nav-1": "Sunsets",
+        "nav-2": "Culture",
+        "nav-3": "Forests",
+        "nav-4": "Cascades",
+        "gallery-0-title": "Mountains & Lakes",
+        "gallery-0-art0-t": "Snowy Twilight",
+        "gallery-0-art0-d": "Majestic snow-capped mountains shrouded in tranquil twilight glow.",
+        "gallery-0-art1-t": "Golden Morning",
+        "gallery-0-art1-d": "Golden morning sunlight illuminating rugged ridges and mountain crests.",
+        "gallery-1-title": "Golden Hour & Sunsets",
+        "gallery-1-art0-t": "Coastal Sunset",
+        "gallery-1-art0-d": "Romantic crimson sunset reflecting across serene ocean waters.",
+        "gallery-1-art1-t": "Evening Glow",
+        "gallery-1-art1-d": "Vibrant purple-orange twilight sky before day vanishes into night.",
+        "gallery-2-title": "Culture & Heritage",
+        "gallery-2-art0-t": "Ancient Lanterns",
+        "gallery-2-art0-d": "Warm street lamps in historic alleys whispering tales of the past.",
+        "gallery-2-art1-t": "Craftsman Touch",
+        "gallery-2-art1-d": "Intense focus of a master artisan preserving timeless heritage.",
+        "gallery-3-title": "Forests & Nature",
+        "gallery-3-art0-t": "Verdant Canopy",
+        "gallery-3-art0-d": "Sunbeams filtering through lush green canopies with peaceful energy.",
+        "gallery-3-art1-t": "Misty Grove",
+        "gallery-3-art1-d": "Ethereal morning fog drifting quietly through untouched woods.",
+        "gallery-4-title": "Waterfalls & Ice",
+        "gallery-4-art0-t": "Valley Waterfalls",
+        "gallery-4-art0-d": "Powerful waterfalls plunging into valley basins with misty spray.",
+        "gallery-4-art1-t": "Emerald Stream",
+        "gallery-4-art1-d": "Crystal clear mountain spring pool shining like pure emerald glass."
+      },
+      tc: {
+        "backHome": "主頁",
+        "brand-name": "數位光影藝廊",
+        "brand-sub": "Max Ma Collection",
+        "loadingTitle": "進入 3D 展覽館空間...",
+        "loadingSub": "加載 3D 展廳與藝術品",
+        "lightMood": "情調模式",
+        "lightHighlight": "高亮模式",
+        "audioOff": "背景音: 關",
+        "audioOn": "背景音: 開",
+        "modalStationTag": "3D 展廳現場展出",
+        "modalThemeLabel": "主題區",
+        "modalFrameTag": "精緻展廳畫框作品",
+        "nav-0": "群山",
+        "nav-1": "夕陽",
+        "nav-2": "文化",
+        "nav-3": "森林",
+        "nav-4": "飛瀑",
+        "gallery-0-title": "山巒與湖泊",
+        "gallery-0-art0-t": "雪峰暮色",
+        "gallery-0-art0-d": "暮色籠罩下的連綿雪峰，展現出大自然的寧靜與宏偉壯麗。",
+        "gallery-0-art1-t": "金輝晨山",
+        "gallery-0-art1-d": "晨光映照在巍峨山嶺之上，金黃色的光芒灑落於險峻山脊。",
+        "gallery-1-title": "金輝與晚霞",
+        "gallery-1-art0-t": "海岸落日",
+        "gallery-1-art0-d": "波光粼粼的海岸線，夕陽將天空染成極致浪漫的橙紅色澤。",
+        "gallery-1-art1-t": "晚霞餘暉",
+        "gallery-1-art1-d": "天際漸層的紫紅晚霞，記錄下日光隱入地平線前最輝煌的時刻。",
+        "gallery-2-title": "文化與古蹟",
+        "gallery-2-art0-t": "古城燈火",
+        "gallery-2-art0-d": "沉澱歲月痕跡的歷史街巷與溫暖燈火，訴說著濃烈的人文記憶。",
+        "gallery-2-art1-t": "匠人工藝",
+        "gallery-2-art1-d": "傳統工藝者的專注眼神，每一道痕跡都是歲月與文化傳承的結晶。",
+        "gallery-3-title": "森林與自然",
+        "gallery-3-art0-t": "綠意林徑",
+        "gallery-3-art0-d": "陽光穿透高聳樹冠灑落斑駁光影，充滿盎然生機與幽靜芬多精。",
+        "gallery-3-art1-t": "晨霧秘林",
+        "gallery-3-art1-d": "輕霧瀰漫於深林小徑間，神秘而寧靜的氛圍令人宛如置身仙境。",
+        "gallery-4-title": "瀑布與冰川",
+        "gallery-4-art0-t": "山谷飛瀑",
+        "gallery-4-art0-d": "萬丈水瀑奔騰而下，激起層層水霧，磅礴的自然動能撼動人心。",
+        "gallery-4-art1-t": "碧潭流泉",
+        "gallery-4-art1-d": "清澈見底的山泉匯聚成翡翠般的碧綠水潭，波光瀲灩純淨無暇。"
+      }
+    };
+
+    // 5 個展區基礎數據
+    const galleryData = [
+      {
+        theme: "Mountains",
+        spotColor: 0xffe2b8,
+        artworks: [
+         { url: "https://raw.githubusercontent.com/noreg714/test/refs/heads/main/images/Mountains-88.avif" },
+          { url: "https://raw.githubusercontent.com/noreg714/test/refs/heads/main/images/Mountains-9.avif" }
+        ]
+      },
+      {
+        theme: "Sunsets",
+        spotColor: 0xffe2b8,
+        artworks: [
+         { url: "https://raw.githubusercontent.com/noreg714/test/refs/heads/main/images/Sunsets-10.avif" },
+          { url: "https://raw.githubusercontent.com/noreg714/test/refs/heads/main/images/Sunsets-5.avif" }
+        ]
+      },
+      {
+        theme: "Culture",
+        spotColor: 0xffe2b8,
+        artworks: [
+          { url: "https://raw.githubusercontent.com/noreg714/test/refs/heads/main/images/Culture-20.avif" },
+          { url: "https://raw.githubusercontent.com/noreg714/test/refs/heads/main/images/Culture-4.avif" }
+        ]
+      },
+      {
+        theme: "Forests",
+        spotColor: 0xffe2b8,
+        artworks: [
+         { url: "https://raw.githubusercontent.com/noreg714/test/refs/heads/main/images/Forests-27.avif" },
+          { url: "https://raw.githubusercontent.com/noreg714/test/refs/heads/main/images/Forests-38.avif" }
+        ]
+      },
+      {
+        theme: "Cascades",
+        spotColor: 0xffe2b8,
+        artworks: [
+          { url: "https://raw.githubusercontent.com/noreg714/test/refs/heads/main/images/Cascades-2.avif" },
+          { url: "https://raw.githubusercontent.com/noreg714/test/refs/heads/main/images/Cascades-41.avif" }
+        ]
+      }
+    ];
+
+    let titleMeshes = [];
+    let plaqueMeshes = [];
+
+    // 滑鼠旋轉與縮放鏡頭變數
+    let isDragging = false;
+    let previousMousePosition = { x: 0, y: 0 };
+    let cameraAngle = 0;
+    let cameraHeight = 2.5;     
+    let cameraDistance = 8.5;
+
+    const galleryRadius = 14;
+    const stationAngles = [0, 1.256, 2.513, 3.769, 5.026];
+
+    // 初始化 Three.js 展館場景
+    function initScene() {
+      const container = document.getElementById('webgl-canvas');
+      const aspect = window.innerWidth / window.innerHeight;
+      const isMobile = aspect < 1.0 || window.innerWidth < 768;
+
+      // 1. Scene
+      scene = new THREE.Scene();
+      const isLight = document.documentElement.classList.contains('light');
+      const bgColor = isLight ? 0xf5f0eb : 0x2b231f;
+      scene.background = new THREE.Color(bgColor);
+      scene.fog = new THREE.FogExp2(bgColor, 0.024);
+
+      // 2. Camera
+      const initialFov = isMobile ? 70 : 55;
+      camera = new THREE.PerspectiveCamera(initialFov, aspect, 0.1, 100);
+      const initDist = isMobile ? galleryRadius - 6.2 : 8.5;
+      camera.position.set(0, 2.5, initDist);
+      currentLookAt.set(0, 2.65, 14);
+
+      // 3. Renderer
+      renderer = new THREE.WebGLRenderer({ canvas: container, antialias: true, powerPreference: "high-performance" });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.12;
+
+      // 4. 建築與鑽石
+      buildArchitecture();
+
+      // 5. 5大展區
+      buildStations();
+
+      // 6. 互動
+      setupInteraction();
+
+      goToStation(0);
+
+      setTimeout(() => {
+        const loader = document.getElementById('loading-overlay');
+        if (loader) {
+          loader.classList.add('opacity-0');
+          setTimeout(() => loader.remove(), 700);
+        }
+      }, 600);
+
+      window.addEventListener('resize', onWindowResize);
+      animate();
+    }
+
+    function buildArchitecture() {
+      const isLight = document.documentElement.classList.contains('light');
+
+      const floorGeo = new THREE.CylinderGeometry(18, 18, 0.2, 64);
+      const floorMat = new THREE.MeshStandardMaterial({
+        color: isLight ? 0xede6de : 0x221a16,
+        roughness: 0.5,
+        metalness: 0.1
+      });
+      const floor = new THREE.Mesh(floorGeo, floorMat);
+      floor.position.y = -0.1;
+      floor.receiveShadow = true;
+      floor.name = "galleryFloor";
+      scene.add(floor);
+
+      const ceilingGeo = new THREE.CylinderGeometry(18, 18, 0.2, 64);
+      const ceilingMat = new THREE.MeshStandardMaterial({
+        color: isLight ? 0xe6dfd5 : 0x1f1713,
+        roughness: 0.85
+      });
+      const ceiling = new THREE.Mesh(ceilingGeo, ceilingMat);
+      ceiling.position.y = 5.8;
+      ceiling.name = "galleryCeiling";
+      scene.add(ceiling);
+
+      const ambientColor = isLight ? 0xfff6ec : 0xffe8d1;
+      const ambientLight = new THREE.AmbientLight(ambientColor, isLight ? 0.95 : 0.65);
+      ambientLight.name = "ambientLight";
+      scene.add(ambientLight);
+
+      const centerLight = new THREE.PointLight(0xffdec2, 2.8, 16);
+      centerLight.position.set(0, 4.8, 0);
+      centerLight.name = "centerLight";
+      scene.add(centerLight);
+
+      const baseGeo = new THREE.CylinderGeometry(1.4, 1.6, 0.8, 32);
+      const baseMat = new THREE.MeshStandardMaterial({
+        color: isLight ? 0xded4cb : 0x3d302a,
+        roughness: 0.35,
+        metalness: 0.2
+      });
+      const base = new THREE.Mesh(baseGeo, baseMat);
+      base.position.set(0, 0.4, 0);
+      base.castShadow = true;
+      base.receiveShadow = true;
+      scene.add(base);
+
+      const crystalGeo = new THREE.IcosahedronGeometry(0.85, 0);
+      const crystalMat = new THREE.MeshPhysicalMaterial({
+        color: 0xffeedd,
+        roughness: 0.05,
+        metalness: 0.05,
+        transmission: 0.92,
+        ior: 2.417,
+        transparent: true,
+        opacity: 0.95,
+        clearcoat: 1.0,
+        clearcoatRoughness: 0.1
+      });
+      const crystal = new THREE.Mesh(crystalGeo, crystalMat);
+      crystal.position.set(0, 1.6, 0);
+      crystal.castShadow = true;
+      crystal.name = "centerCrystal";
+      scene.add(crystal);
+    }
+
+    function buildStations() {
+      const textureLoader = new THREE.TextureLoader();
+      const isLight = document.documentElement.classList.contains('light');
+
+      galleryData.forEach((data, index) => {
+        const angle = stationAngles[index];
+        const stationGroup = new THREE.Group();
+
+        const wallWidth = 7.5;
+        const wallHeight = 5.2;
+        const mainWallGeo = new THREE.BoxGeometry(wallWidth, wallHeight, 0.3);
+        const mainWallMat = new THREE.MeshStandardMaterial({
+          color: isLight ? 0xf2ece4 : 0x362c27,
+          roughness: 0.75
+        });
+        const mainWall = new THREE.Mesh(mainWallGeo, mainWallMat);
+        mainWall.position.set(0, wallHeight / 2, 0);
+        mainWall.receiveShadow = true;
+        mainWall.castShadow = true;
+        mainWall.name = `mainWall_${index}`;
+        stationGroup.add(mainWall);
+
+        const sideWallWidth = 2.4;
+        const sideWallGeo = new THREE.BoxGeometry(sideWallWidth, wallHeight, 0.25);
+        const sideWallMat = new THREE.MeshStandardMaterial({
+          color: isLight ? 0xeae2d8 : 0x2b231f,
+          roughness: 0.8
+        });
+
+        const leftSideWall = new THREE.Mesh(sideWallGeo, sideWallMat);
+        leftSideWall.position.set(-wallWidth / 2 - 0.7, wallHeight / 2, 0.7);
+        leftSideWall.rotation.y = Math.PI / 6;
+        leftSideWall.name = `sideWall_L_${index}`;
+        stationGroup.add(leftSideWall);
+
+        const rightSideWall = new THREE.Mesh(sideWallGeo, sideWallMat);
+        rightSideWall.position.set(wallWidth / 2 + 0.7, wallHeight / 2, 0.7);
+        rightSideWall.rotation.y = -Math.PI / 6;
+        rightSideWall.name = `sideWall_R_${index}`;
+        stationGroup.add(rightSideWall);
+
+        const spotLight = new THREE.SpotLight(data.spotColor, 2.6);
+        spotLight.position.set(0, 6, 2.8);
+        spotLight.target = mainWall;
+        spotLight.angle = Math.PI / 3.2;
+        spotLight.penumbra = 0.5;
+        spotLight.castShadow = true;
+        stationGroup.add(spotLight);
+
+        const titleGeo = new THREE.PlaneGeometry(2.6, 0.55);
+        const titleMat = new THREE.MeshBasicMaterial({ transparent: true });
+        const titleMesh = new THREE.Mesh(titleGeo, titleMat);
+        titleMesh.position.set(0, 4.3, 0.17);
+        stationGroup.add(titleMesh);
+        titleMeshes[index] = titleMesh;
+
+        const aspect = window.innerWidth / window.innerHeight;
+        const isMobile = aspect < 1.0 || window.innerWidth < 768;
+        const frameXPositions = isMobile ? [-1.0, 1.0] : [-1.9, 1.9];
+
+        plaqueMeshes[index] = [];
+
+        data.artworks.forEach((art, artIdx) => {
+          const frameWidth = isMobile ? 1.65 : 2.4;
+          const frameHeight = isMobile ? 1.25 : 1.7;
+
+          const artworkGroup = new THREE.Group();
+          artworkGroup.position.set(frameXPositions[artIdx], 2.4, 0.16);
+
+          const frameBorderGeo = new THREE.BoxGeometry(frameWidth + (isMobile ? 0.1 : 0.16), frameHeight + (isMobile ? 0.1 : 0.16), 0.08);
+          const frameBorderMat = new THREE.MeshStandardMaterial({
+            color: isLight ? 0x5a4a42 : 0x241d1a,
+            roughness: 0.35,
+            metalness: 0.15
+          });
+          const frameBorder = new THREE.Mesh(frameBorderGeo, frameBorderMat);
+          artworkGroup.add(frameBorder);
+
+          const matBoardGeo = new THREE.PlaneGeometry(frameWidth + 0.02, frameHeight + 0.02);
+          const matBoardMat = new THREE.MeshBasicMaterial({ color: isLight ? 0xffffff : 0x3d302a });
+          const matBoard = new THREE.Mesh(matBoardGeo, matBoardMat);
+          matBoard.position.z = 0.042;
+          matBoard.name = `matBoard_${index}_${artIdx}`;
+          artworkGroup.add(matBoard);
+
+          const pictureGeo = new THREE.PlaneGeometry(frameWidth - (isMobile ? 0.12 : 0.2), frameHeight - (isMobile ? 0.12 : 0.2));
+          const texture = textureLoader.load(art.url);
+          texture.encoding = THREE.sRGBEncoding;
+
+          const pictureMat = new THREE.MeshBasicMaterial({ map: texture });
+          const pictureMesh = new THREE.Mesh(pictureGeo, pictureMat);
+          pictureMesh.position.z = 0.045;
+          artworkGroup.add(pictureMesh);
+
+          pictureMesh.userData = {
+            stationId: index,
+            artId: artIdx,
+            theme: data.theme,
+            url: art.url
+          };
+          interactiveObjects.push(pictureMesh);
+
+          const plaqueGeo = new THREE.PlaneGeometry(isMobile ? 1.0 : 1.4, isMobile ? 0.22 : 0.3);
+          const plaqueMat = new THREE.MeshBasicMaterial({ transparent: true, alphaTest: 0.1 });
+          const plaqueMesh = new THREE.Mesh(plaqueGeo, plaqueMat);
+          plaqueMesh.position.set(0, isMobile ? -0.85 : -1.15, 0.042);
+          artworkGroup.add(plaqueMesh);
+          plaqueMeshes[index][artIdx] = plaqueMesh;
+
+          stationGroup.add(artworkGroup);
+        });
+
+        stationGroup.position.x = Math.sin(angle) * galleryRadius;
+        stationGroup.position.z = Math.cos(angle) * galleryRadius;
+        stationGroup.rotation.y = angle + Math.PI;
+
+        scene.add(stationGroup);
+      });
+
+      updateLanguageUI();
+    }
+
+    function updateLanguageUI() {
+      applyTranslations(translations[currentLang] || translations.en);
+
+      const isLight = document.documentElement.classList.contains('light');
+
+      galleryData.forEach((data, index) => {
+        const themeTitle = getI18nText(`gallery-${index}-title`);
+
+        const titleCanvas = document.createElement('canvas');
+        titleCanvas.width = 512;
+        titleCanvas.height = 128;
+        const ctx = titleCanvas.getContext('2d');
+        ctx.fillStyle = isLight ? "#f2ece4" : "#362c27";
+        ctx.fillRect(0, 0, 512, 128);
+        ctx.fillStyle = isLight ? "#38302a" : "#f4eee9";
+        ctx.font = "300 34px 'Cormorant Garamond', 'Noto Sans TC', serif";
+        ctx.textAlign = "center";
+        ctx.fillText(themeTitle, 256, 75);
+
+        if (titleMeshes[index]) {
+          if (titleMeshes[index].material.map) titleMeshes[index].material.map.dispose();
+          titleMeshes[index].material.map = new THREE.CanvasTexture(titleCanvas);
+          titleMeshes[index].material.needsUpdate = true;
+        }
+
+        data.artworks.forEach((art, artIdx) => {
+          const artTitle = getI18nText(`gallery-${index}-art${artIdx}-t`);
+
+          const plaqueCanvas = document.createElement('canvas');
+          plaqueCanvas.width = 400;
+          plaqueCanvas.height = 80;
+          const pCtx = plaqueCanvas.getContext('2d');
+          
+          pCtx.clearRect(0, 0, 400, 80);
+          pCtx.fillStyle = isLight ? "#38302a" : "#f4eee9";
+          pCtx.font = "300 22px 'Montserrat', 'Noto Sans TC', sans-serif";
+          pCtx.textAlign = "center";
+          pCtx.textBaseline = "middle";
+          pCtx.fillText(artTitle, 200, 40);
+
+          const pm = plaqueMeshes[index][artIdx];
+          if (pm) {
+            if (pm.material.map) pm.material.map.dispose();
+            pm.material.map = new THREE.CanvasTexture(plaqueCanvas);
+            pm.material.needsUpdate = true;
+          }
+        });
+      });
+    }
+
+    function getI18nText(key) {
+      const dict = translations[currentLang] || translations.en;
+      return dict[key] || "";
+    }
+
+    function goToStation(index) {
+      currentStationIndex = index;
+
+      document.querySelectorAll('.station-btn').forEach((btn, i) => {
+        if (i === index) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+
+      const aspect = window.innerWidth / window.innerHeight;
+      const isMobile = aspect < 1.0 || window.innerWidth < 768;
+      const angle = stationAngles[index];
+      cameraAngle = angle;
+
+      cameraDistance = isMobile ? galleryRadius - 6.2 : galleryRadius - 5.5;
+      cameraHeight = isMobile ? 2.5 : 2.2;
+
+      updateCameraTarget();
+    }
+
+    function updateCameraTarget() {
+      const aspect = window.innerWidth / window.innerHeight;
+      const isMobile = aspect < 1.0 || window.innerWidth < 768;
+
+      targetCameraPos.x = Math.sin(cameraAngle) * cameraDistance;
+      targetCameraPos.z = Math.cos(cameraAngle) * cameraDistance;
+      targetCameraPos.y = cameraHeight;
+
+      targetLookAt.x = Math.sin(cameraAngle) * galleryRadius;
+      targetLookAt.z = Math.cos(cameraAngle) * galleryRadius;
+      targetLookAt.y = isMobile ? 2.65 : 2.6;
+    }
+
+    function setupInteraction() {
+      const raycaster = new THREE.Raycaster();
+      const mouse = new THREE.Vector2();
+
+      document.querySelectorAll('.station-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = parseInt(btn.getAttribute('data-station'));
+          goToStation(idx);
+        });
+      });
+
+      document.getElementById('reset-cam-btn').addEventListener('click', () => {
+        goToStation(currentStationIndex);
+      });
+
+      let isMoodMode = true;
+      document.getElementById('toggle-light-btn').addEventListener('click', () => {
+        isMoodMode = !isMoodMode;
+        const amb = scene.getObjectByName("ambientLight");
+        const centerL = scene.getObjectByName("centerLight");
+        const btnText = document.getElementById('light-btn-text');
+
+        if (isMoodMode) {
+          amb.intensity = 0.65;
+          centerL.intensity = 2.8;
+          renderer.toneMappingExposure = 1.12;
+          btnText.innerText = getI18nText('lightMood');
+        } else {
+          amb.intensity = 1.15;
+          centerL.intensity = 4.5;
+          renderer.toneMappingExposure = 1.32;
+          btnText.innerText = getI18nText('lightHighlight');
+        }
+      });
+
+      const bgAudio = new Audio('https://noreg714.github.io/test/audio/amb-river-and-birds.mp3');
+      bgAudio.loop = true;
+      let isAudioPlaying = false;
+
+      document.getElementById('toggle-audio-btn').addEventListener('click', () => {
+        const icon = document.getElementById('audio-icon');
+        const text = document.getElementById('audio-text');
+
+        if (!isAudioPlaying) {
+          bgAudio.play().then(() => {
+            isAudioPlaying = true;
+            icon.setAttribute('data-lucide', 'volume-2');
+            icon.className = "w-3.5 h-3.5 text-[#f4eee9] animate-pulse";
+            text.innerText = getI18nText('audioOn');
+            lucide.createIcons();
+          }).catch(e => {
+            console.log("Audio play error:", e);
+          });
+        } else {
+          bgAudio.pause();
+          isAudioPlaying = false;
+          icon.setAttribute('data-lucide', 'volume-x');
+          icon.className = "w-3.5 h-3.5 text-[#b5a193]";
+          text.innerText = getI18nText('audioOff');
+          lucide.createIcons();
+        }
+      });
+
+      const canvas = document.getElementById('webgl-canvas');
+      let touchStartDist = 0;
+
+      canvas.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        previousMousePosition = { x: e.clientX, y: e.clientY };
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        const deltaX = e.clientX - previousMousePosition.x;
+        const deltaY = e.clientY - previousMousePosition.y;
+
+        cameraAngle -= deltaX * 0.004;
+        cameraHeight = Math.max(0.5, Math.min(4.5, cameraHeight + deltaY * 0.004));
+
+        updateCameraTarget();
+        previousMousePosition = { x: e.clientX, y: e.clientY };
+      });
+
+      window.addEventListener('mouseup', () => {
+        isDragging = false;
+      });
+
+      canvas.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1) {
+          isDragging = true;
+          previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        } else if (e.touches.length === 2) {
+          isDragging = false;
+          touchStartDist = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+          );
+        }
+      }, { passive: false });
+
+      canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+
+        if (e.touches.length === 1 && isDragging) {
+          const deltaX = e.touches[0].clientX - previousMousePosition.x;
+          const deltaY = e.touches[0].clientY - previousMousePosition.y;
+
+          cameraAngle -= deltaX * 0.005;
+          cameraHeight = Math.max(0.5, Math.min(4.5, cameraHeight + deltaY * 0.005));
+
+          updateCameraTarget();
+          previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        } else if (e.touches.length === 2) {
+          const currentDist = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+          );
+          const deltaDist = currentDist - touchStartDist;
+
+          cameraDistance = Math.max(3.0, Math.min(16.0, cameraDistance - deltaDist * 0.02));
+          updateCameraTarget();
+
+          touchStartDist = currentDist;
+        }
+      }, { passive: false });
+
+      canvas.addEventListener('touchend', () => {
+        isDragging = false;
+      });
+
+      window.addEventListener('wheel', (e) => {
+        cameraDistance = Math.max(3.0, Math.min(16.0, cameraDistance + e.deltaY * 0.005));
+        updateCameraTarget();
+      }, { passive: true });
+
+      window.addEventListener('click', (e) => {
+        if (e.target.closest('button') || e.target.closest('a') || e.target.closest('#artwork-modal')) return;
+
+        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(interactiveObjects);
+
+        if (intersects.length > 0) {
+          const artData = intersects[0].object.userData;
+          openModal(artData);
+        }
+      });
+
+      document.getElementById('close-modal-btn').addEventListener('click', closeModal);
+      document.getElementById('artwork-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'artwork-modal') closeModal();
+      });
+    }
+
+    function openModal(data) {
+      const modal = document.getElementById('artwork-modal');
+      const modalCard = document.getElementById('modal-card');
+      
+      const title = getI18nText(`gallery-${data.stationId}-art${data.artId}-t`);
+      const desc = getI18nText(`gallery-${data.stationId}-art${data.artId}-d`);
+
+      document.getElementById('modal-img').src = data.url;
+      document.getElementById('modal-title').innerText = title;
+      document.getElementById('modal-desc').innerText = desc;
+
+      modal.classList.remove('pointer-events-none');
+      modal.classList.remove('opacity-0');
+      modalCard.classList.remove('scale-95');
+      modalCard.classList.add('scale-100');
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('artwork-modal');
+      const modalCard = document.getElementById('modal-card');
+
+      modal.classList.add('opacity-0');
+      modalCard.classList.remove('scale-100');
+      modalCard.classList.add('scale-95');
+
+      setTimeout(() => {
+        modal.classList.add('pointer-events-none');
+      }, 300);
+    }
+
+    function toggleTheme() {
+      const htmlElement = document.documentElement;
+      const sunIcon = document.getElementById('sun-icon');
+      const moonIcon = document.getElementById('moon-icon');
+
+      htmlElement.classList.toggle('light');
+      const isLight = htmlElement.classList.contains('light');
+
+      if (sunIcon && moonIcon) {
+        if (isLight) {
+          sunIcon.classList.remove('hidden');
+          sunIcon.classList.add('block');
+          moonIcon.classList.remove('block');
+          moonIcon.classList.add('hidden');
+        } else {
+          sunIcon.classList.remove('block');
+          sunIcon.classList.add('hidden');
+          moonIcon.classList.remove('hidden');
+          moonIcon.classList.add('block');
+        }
+      }
+
+      if (scene) {
+        const bgColor = isLight ? 0xf5f0eb : 0x2b231f;
+        scene.background.setHex(bgColor);
+        scene.fog.color.setHex(bgColor);
+
+        const floor = scene.getObjectByName("galleryFloor");
+        if (floor) floor.material.color.setHex(isLight ? 0xede6de : 0x221a16);
+
+        const ceiling = scene.getObjectByName("galleryCeiling");
+        if (ceiling) ceiling.material.color.setHex(isLight ? 0xe6dfd5 : 0x1f1713);
+
+        const amb = scene.getObjectByName("ambientLight");
+        if (amb) {
+          amb.color.setHex(isLight ? 0xfff6ec : 0xffe8d1);
+          amb.intensity = isLight ? 0.95 : 0.65;
+        }
+
+        galleryData.forEach((_, idx) => {
+          const mainWall = scene.getObjectByName(`mainWall_${idx}`);
+          if (mainWall) mainWall.material.color.setHex(isLight ? 0xf2ece4 : 0x362c27);
+
+          const sideL = scene.getObjectByName(`sideWall_L_${idx}`);
+          if (sideL) sideL.material.color.setHex(isLight ? 0xeae2d8 : 0x2b231f);
+
+          const sideR = scene.getObjectByName(`sideWall_R_${idx}`);
+          if (sideR) sideR.material.color.setHex(isLight ? 0xeae2d8 : 0x2b231f);
+
+          [0, 1].forEach(artIdx => {
+            const matBoard = scene.getObjectByName(`matBoard_${idx}_${artIdx}`);
+            if (matBoard) matBoard.material.color.setHex(isLight ? 0xffffff : 0x3d302a);
+          });
+        });
+
+        updateLanguageUI();
+      }
+
+      lucide.createIcons();
+    }
+
+    function setLanguage(lang) {
+      currentLang = lang;
+      const btnEn = document.getElementById('lang-en');
+      const btnTc = document.getElementById('lang-tc');
+      const btnSc = document.getElementById('lang-sc');
+
+      [btnEn, btnTc, btnSc].forEach(b => {
+        if (b) b.className = "hover:text-[#f4eee9] [.light_&]:hover:text-[#38302a] transition-colors";
+      });
+
+      if (lang === 'en') {
+        if (btnEn) btnEn.className = "text-[#f4eee9] [.light_&]:text-[#38302a] font-medium transition-colors";
+        updateLanguageUI();
+      } else if (lang === 'tc') {
+        if (btnTc) btnTc.className = "text-[#f4eee9] [.light_&]:text-[#38302a] font-medium transition-colors";
+        updateLanguageUI();
+      } else if (lang === 'sc') {
+        if (btnSc) btnSc.className = "text-[#f4eee9] [.light_&]:text-[#38302a] font-medium transition-colors";
+        
+        const converter = OpenCC.Converter({ from: 'hk', to: 'cn' });
+        const scDict = {};
+        for (let key in translations.tc) {
+          scDict[key] = converter(translations.tc[key]);
+        }
+        translations.sc = scDict;
+        updateLanguageUI();
+      }
+    }
+
+    function applyTranslations(dict) {
+      const elements = document.querySelectorAll('[data-i18n]');
+      elements.forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (dict[key]) {
+          el.innerText = dict[key];
+        }
+      });
+    }
+
+    function onWindowResize() {
+      const aspect = window.innerWidth / window.innerHeight;
+      const isMobile = aspect < 1.0 || window.innerWidth < 768;
+      
+      camera.aspect = aspect;
+      camera.fov = isMobile ? 70 : 55;
+      camera.updateProjectionMatrix();
+      
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      camera.position.lerp(targetCameraPos, 0.06);
+      currentLookAt.lerp(targetLookAt, 0.06);
+      camera.lookAt(currentLookAt);
+
+      const centerCrystal = scene.getObjectByName("centerCrystal");
+      if (centerCrystal) {
+        centerCrystal.rotation.y += 0.008;
+        centerCrystal.rotation.x += 0.003;
+        centerCrystal.position.y = 1.6 + Math.sin(Date.now() * 0.0015) * 0.12;
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    window.onload = function () {
+      lucide.createIcons();
+      initScene();
+    };
+  </script>
+</body>
+</html>
