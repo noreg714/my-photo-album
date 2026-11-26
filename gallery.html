@@ -1,0 +1,2164 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Max Ma Collection — Editorial Photography Showcase</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              bg: '#0d0d0d',
+              surface: '#141414',
+              card: '#111111',
+              border: '#222222',
+              muted: '#888888',
+              gold: '#D4AF37'
+            }
+          },
+          fontFamily: {
+            serif: ['Cormorant Garamond', 'Georgia', 'serif'],
+            sans: ['Montserrat', 'Helvetica', 'Arial', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts: Cormorant Garamond & Montserrat -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Montserrat:ital,wght@0,200;0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- OpenCC-js for Traditional/Simplified Chinese Conversion -->
+  <script src="https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/full.js"></script>
+
+  <!-- Alpine.js -->
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+  <style>
+    body {
+      background-color: #0d0d0d;
+      color: #e6e6e6;
+      font-family: 'Montserrat', sans-serif;
+      overflow-x: hidden;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* Light Mode Overrides */
+    .light body {
+      background-color: #f7f7f7;
+      color: #1a1a1a;
+    }
+
+    .font-serif-title {
+      font-family: 'Cormorant Garamond', serif;
+    }
+
+    /* Top Loading Progress Bar */
+    #top-progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 2px;
+      width: 0%;
+      z-index: 60;
+      background: linear-gradient(90deg, #888888, #D4AF37, #ffffff);
+      transition: width 0.28s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.45s ease;
+      pointer-events: none;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0d0d0d;
+    }
+    .light ::-webkit-scrollbar-track {
+      background: #f7f7f7;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #333333;
+      border-radius: 3px;
+    }
+    .light ::-webkit-scrollbar-thumb {
+      background: #cccccc;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #555555;
+    }
+    .light ::-webkit-scrollbar-thumb:hover {
+      background: #999999;
+    }
+
+    /* Glassmorphism Header */
+    .glass-nav {
+      background: rgba(13, 13, 13, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      transition: background 0.3s ease, border-color 0.3s ease;
+    }
+    .light .glass-nav {
+      background: rgba(247, 247, 247, 0.85);
+    }
+
+    /* Minimal Hide Scrollbar */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* 真實瀑布流專用樣式 */
+    .true-masonry {
+      column-gap: 1.5rem;
+    }
+    .true-masonry.cols-2 { column-count: 2; }
+    .true-masonry.cols-3 { column-count: 3; }
+    .true-masonry.cols-4 { column-count: 4; }
+
+    @media (max-width: 768px) {
+      .true-masonry { column-count: 2 !important; }
+    }
+    @media (max-width: 480px) {
+      .true-masonry { column-count: 1 !important; }
+    }
+
+    /* 圖片載入完成的平滑淡入動畫 */
+    .fade-in {
+      animation: fadeIn 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px) scale(0.99); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* 載入中骨架屏閃爍特效 */
+    @keyframes pulse-slow {
+      0%, 100% { opacity: 0.35; }
+      50% { opacity: 0.75; }
+    }
+    .skeleton-loader {
+      animation: pulse-slow 1.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    [x-cloak] { display: none !important; }
+  </style>
+</head>
+<body class="selection:bg-white selection:text-black min-h-screen flex flex-col justify-between"
+      x-data="galleryApp()" 
+      x-init="initApp()"
+      @keydown.escape.window="closeLightbox()"
+      @keydown.left.window="if(lightboxOpen) prevPhoto()"
+      @keydown.right.window="if(lightboxOpen) nextPhoto()">
+
+  <!-- Top Smooth Loading Bar -->
+  <div id="top-progress-bar" :style="`width: ${loadProgress}%; opacity: ${galleryReady ? 0 : 1};`"></div>
+
+  <!-- Fixed Header Navigation -->
+  <header class="fixed top-0 left-0 w-full z-50 glass-nav border-b border-neutral-900 [.light_&]:border-neutral-200 flex justify-between items-center px-6 md:px-12 py-6 transition-all duration-300">
+    <div class="flex items-center space-x-3 w-1/2 md:w-1/4">
+      <span class="text-xs uppercase tracking-[0.3em] font-medium text-white [.light_&]:text-neutral-900">MaxMa Collection</span>
+      <span class="text-[10px] text-neutral-400 [.light_&]:text-neutral-500 border border-neutral-700 [.light_&]:border-neutral-300 px-2 py-0.5 rounded-full hidden sm:inline-block">EDITION 2026</span>
+    </div>
+
+    <!-- Header Navigation Center (Desktop) -->
+    <nav class="hidden md:flex justify-center space-x-8 text-xs tracking-[0.2em] uppercase text-neutral-300 [.light_&]:text-neutral-700 w-2/4 text-center">
+      <a href="index.html" class="hover:text-white [.light_&]:hover:text-black transition-colors" data-i18n="nav-home">Home</a>
+      <a href="gallery.html" class="text-white [.light_&]:text-black font-medium transition-colors" data-i18n="nav-gallery">Gallery</a>
+      <a href="photobooks.html" class="hover:text-white [.light_&]:hover:text-black transition-colors" data-i18n="nav-perspectives">Photobooks</a>
+      <a href="exhibition.html" class="hover:text-white [.light_&]:hover:text-black transition-colors" data-i18n="nav-exhibition">Virtual Space</a>
+    </nav>
+
+    <!-- Right Side Controls: Desktop Language & Theme Controls / Mobile Hamburger Button -->
+    <div class="flex justify-end items-center space-x-4 w-1/2 md:w-1/4">
+      <!-- Desktop EN | 繁 | 簡 Language Switcher -->
+      <div class="hidden md:flex items-center space-x-2 text-[10px] uppercase tracking-[0.15em] text-neutral-300 [.light_&]:text-neutral-700">
+        <button id="lang-en" type="button" onclick="setLanguage('en')" class="text-white [.light_&]:text-black font-medium transition-colors">EN</button>
+        <span class="text-neutral-600">/</span>
+        <button id="lang-tc" type="button" onclick="setLanguage('tc')" class="hover:text-white [.light_&]:hover:text-black transition-colors">繁</button>
+        <span class="text-neutral-600">/</span>
+        <button id="lang-sc" type="button" onclick="setLanguage('sc')" class="hover:text-white [.light_&]:hover:text-black transition-colors">简</button>
+      </div>
+
+      <!-- Desktop Black/White Mode Toggle Button -->
+      <button id="theme-toggle" type="button" onclick="toggleTheme()" class="hidden md:flex items-center justify-center w-8 h-8 rounded-full border border-neutral-700 [.light_&]:border-neutral-300 hover:border-white [.light_&]:hover:border-black text-neutral-300 [.light_&]:text-neutral-700 hover:text-white [.light_&]:hover:text-black transition-all duration-300" aria-label="Toggle Theme">
+        <i data-lucide="sun" id="sun-icon" class="w-3.5 h-3.5 hidden"></i>
+        <i data-lucide="moon" id="moon-icon" class="w-3.5 h-3.5 block"></i>
+      </button>
+
+      <!-- Mobile Hamburger Button (< 768px) -->
+      <button id="mobile-menu-btn" type="button" onclick="toggleMobileMenu()" class="md:hidden flex items-center justify-center w-8 h-8 text-neutral-300 [.light_&]:text-neutral-700 hover:text-white [.light_&]:hover:text-black transition-colors" aria-label="Open Menu">
+        <i data-lucide="menu" id="menu-icon" class="w-5 h-5 block"></i>
+        <i data-lucide="x" id="close-icon" class="w-5 h-5 hidden"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Mobile Menu Overlay (< 768px) -->
+  <div id="mobile-menu" class="fixed inset-0 bg-[#0d0d0d] [.light_&]:bg-[#f7f7f7] z-40 flex flex-col justify-center items-center space-y-8 text-sm uppercase tracking-[0.3em] text-neutral-300 [.light_&]:text-neutral-700 opacity-0 pointer-events-none transition-all duration-300 md:hidden">
+    <a href="index.html" onclick="toggleMobileMenu()" class="hover:text-white [.light_&]:hover:text-black transition-colors" data-i18n="nav-home">Home</a>
+    <a href="gallery.html" onclick="toggleMobileMenu()" class="text-white [.light_&]:text-black font-medium transition-colors" data-i18n="nav-gallery">Gallery</a>
+    <a href="photobooks.html" onclick="toggleMobileMenu()" class="hover:text-white [.light_&]:hover:text-black transition-colors" data-i18n="nav-perspectives">Photobooks</a>
+    <a href="exhibition.html" onclick="toggleMobileMenu()" class="hover:text-white [.light_&]:hover:text-black transition-colors" data-i18n="nav-exhibition">Virtual Space</a>
+
+    <div class="w-12 h-[1px] bg-neutral-800 [.light_&]:bg-neutral-300 my-2"></div>
+
+    <!-- 行動版語系切換 (EN / 繁 / 簡) -->
+    <div class="flex items-center space-x-3 text-xs tracking-[0.2em]">
+      <button id="mob-lang-en" type="button" onclick="setLanguage('en'); toggleMobileMenu();" class="text-white [.light_&]:text-black font-medium transition-colors">EN</button>
+      <span class="text-neutral-600">/</span>
+      <button id="mob-lang-tc" type="button" onclick="setLanguage('tc'); toggleMobileMenu();" class="hover:text-white [.light_&]:hover:text-black transition-colors">繁</button>
+      <span class="text-neutral-600">/</span>
+      <button id="mob-lang-sc" type="button" onclick="setLanguage('sc'); toggleMobileMenu();" class="hover:text-white [.light_&]:hover:text-black transition-colors">简</button>
+    </div>
+
+    <!-- 行動版黑白主題切換按鈕 -->
+    <button type="button" onclick="toggleTheme();" class="flex items-center space-x-2 text-xs tracking-[0.2em] text-neutral-400 hover:text-white [.light_&]:hover:text-black transition-colors pt-2">
+      <span id="mob-theme-dark" class="flex items-center space-x-2">
+        <i data-lucide="moon" class="w-4 h-4"></i>
+        <span class="text-[10px] uppercase" data-i18n="theme-dark">DARK MODE</span>
+      </span>
+      <span id="mob-theme-light" class="flex items-center space-x-2 hidden">
+        <i data-lucide="sun" class="w-4 h-4"></i>
+        <span class="text-[10px] uppercase" data-i18n="theme-light">LIGHT MODE</span>
+      </span>
+    </button>
+  </div>
+
+  <!-- Dynamic Photo Gallery Section -->
+  <main id="gallery" class="relative z-30 max-w-[1700px] mx-auto px-6 md:px-12 pt-32 pb-20 w-full flex-grow transition-opacity duration-500"
+        :class="galleryReady ? 'opacity-100' : 'opacity-70'">
+    
+    <!-- True Masonry Flow Grid -->
+    <div class="true-masonry mb-12"
+         :class="{
+             'cols-4': gridCols === 4,
+             'cols-3': gridCols === 3,
+             'cols-2': gridCols === 2
+         }">
+      
+      <template x-for="photo in filteredPhotos" :key="photo.id">
+        <div @click="openLightbox(photo)"
+             class="card-item group relative cursor-pointer mb-6 break-inside-avoid"
+             x-data="{ loaded: false }">
+          
+          <!-- Image Container (min-h only while loading so landscape photos have no empty bottom gap) -->
+          <div class="overflow-hidden rounded-lg bg-neutral-900/80 [.light_&]:bg-neutral-200 relative shadow-md"
+               :class="loaded ? '' : 'min-h-[250px]'">
+            
+            <!-- Loading Skeleton Placeholder -->
+            <div x-show="!loaded" class="absolute inset-0 flex flex-col items-center justify-center bg-neutral-900/90 [.light_&]:bg-neutral-200 skeleton-loader z-10">
+              <div class="w-6 h-6 border-2 border-neutral-700 border-t-white rounded-full animate-spin mb-2"></div>
+              <span class="text-[9px] uppercase tracking-[0.2em] text-neutral-500" data-i18n="loading-text">LOADING...</span>
+            </div>
+
+            <!-- Actual Image with Lazy Loading, Decode & Smooth Fade-in -->
+            <img :src="photo.url" 
+                 :alt="photo.title" 
+                 loading="lazy"
+                 decoding="async"
+                 x-init="if ($el.complete) { $el.decode().catch(() => {}).finally(() => { loaded = true; }); }"
+                 @load="const img = $el; if (img.decode) { img.decode().catch(() => {}).finally(() => { loaded = true; }); } else { loaded = true; }"
+                 class="w-full h-auto block object-cover brightness-90 contrast-115 transition-all duration-700 ease-out group-hover:brightness-105 group-hover:scale-105"
+                 :class="loaded ? 'fade-in' : 'opacity-0'">
+            
+            <!-- Hover Expand Button Badge (Top Right) -->
+            <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
+              <div class="w-8 h-8 rounded-full bg-black/60 backdrop-blur-md border border-white/25 flex items-center justify-center text-white">
+                <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
+              </div>
+            </div>
+
+            <!-- Bottom Left Info Stack (Category & Location) -->
+            <div class="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-start gap-1.5 z-20">
+              <span class="text-[9px] uppercase tracking-[0.25em] bg-black/70 backdrop-blur-md border border-white/10 text-neutral-300 px-3 py-1 rounded-full"
+                    x-text="photo.vol[currentLang] || photo.vol.en"></span>
+              <span class="text-[9px] uppercase tracking-[0.2em] bg-black/70 backdrop-blur-md border border-white/10 text-neutral-300 px-3 py-1 rounded-full flex items-center gap-1.5">
+                <i data-lucide="map-pin" class="w-3 h-3 text-brand-gold"></i>
+                <span x-text="photo.location"></span>
+              </span>
+            </div>
+          </div>
+
+        </div>
+      </template>
+    </div>
+
+    <!-- Empty State -->
+    <div x-show="filteredPhotos.length === 0" class="py-24 text-center text-neutral-500 text-xs uppercase tracking-[0.3em]" data-i18n="empty-gallery">
+      NO PHOTOGRAPHS FOUND IN THIS CATEGORY.
+    </div>
+
+  </main>
+
+  <!-- COMBINED FLOATING CONTROL BAR -->
+  <div class="fixed bottom-2 sm:bottom-3 left-0 w-full z-40 flex justify-center px-3 sm:px-4 pointer-events-none">
+    <div class="pointer-events-auto inline-flex items-center gap-2 sm:gap-3 bg-neutral-900/90 [.light_&]:bg-white/90 backdrop-blur-xl border border-neutral-800 [.light_&]:border-neutral-200 p-1.5 sm:p-2 rounded-full shadow-2xl overflow-x-auto max-w-full no-scrollbar">
+      
+      <!-- Part A: Category Filter Buttons -->
+      <div class="flex items-center space-x-1 shrink-0">
+        <template x-for="category in categories" :key="category.id">
+          <button type="button"
+                  @click="activeCategory = category.id"
+                  :class="activeCategory === category.id 
+                    ? 'bg-white [.light_&]:bg-neutral-900 text-black [.light_&]:text-white font-medium shadow-sm' 
+                    : 'text-neutral-400 [.light_&]:text-neutral-600 hover:text-white [.light_&]:hover:text-black'"
+                  class="px-3 py-1 text-[10px] uppercase tracking-[0.15em] rounded-full transition-all duration-300 whitespace-nowrap">
+            <span x-text="category.label[currentLang] || category.label.en"></span>
+          </button>
+        </template>
+      </div>
+
+      <!-- Part B: Grid Layout Switcher -->
+      <div class="hidden md:flex items-center">
+        <div class="w-[1px] h-5 bg-neutral-800 [.light_&]:bg-neutral-250 shrink-0 mx-2"></div>
+
+        <div class="flex items-center space-x-2 shrink-0 px-1">
+          <button type="button"
+                  @click="gridCols = 2" 
+                  :class="gridCols === 2 ? 'text-white [.light_&]:text-black' : 'text-neutral-500 hover:text-neutral-300 [.light_&]:hover:text-neutral-700'"
+                  title="2 Columns Grid"
+                  class="p-1 transition-colors">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="4" y="3" width="7" height="18" rx="1"/>
+              <rect x="13" y="3" width="7" height="18" rx="1"/>
+            </svg>
+          </button>
+
+          <button type="button"
+                  @click="gridCols = 3" 
+                  :class="gridCols === 3 ? 'text-white [.light_&]:text-black' : 'text-neutral-500 hover:text-neutral-300 [.light_&]:hover:text-neutral-700'"
+                  title="3 Columns Grid"
+                  class="p-1 transition-colors">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="3" y="3" width="8" height="8" rx="1"/>
+              <rect x="13" y="3" width="8" height="8" rx="1"/>
+              <rect x="3" y="13" width="8" height="8" rx="1"/>
+              <rect x="13" y="13" width="8" height="8" rx="1"/>
+            </svg>
+          </button>
+
+          <button type="button"
+                  @click="gridCols = 4" 
+                  :class="gridCols === 4 ? 'text-white [.light_&]:text-black' : 'text-neutral-500 hover:text-neutral-300 [.light_&]:hover:text-neutral-700'"
+                  title="4 Columns Grid"
+                  class="p-1 transition-colors">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="3" y="3" width="5" height="5" rx="0.5"/>
+              <rect x="9.5" y="3" width="5" height="5" rx="0.5"/>
+              <rect x="16" y="3" width="5" height="5" rx="0.5"/>
+              <rect x="3" y="9.5" width="5" height="5" rx="0.5"/>
+              <rect x="9.5" y="9.5" width="5" height="5" rx="0.5"/>
+              <rect x="16" y="9.5" width="5" height="5" rx="0.5"/>
+              <rect x="3" y="16" width="5" height="5" rx="0.5"/>
+              <rect x="9.5" y="16" width="5" height="5" rx="0.5"/>
+              <rect x="16" y="16" width="5" height="5" rx="0.5"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Luxury Dark Editorial Lightbox Modal -->
+  <div x-show="lightboxOpen" 
+       x-transition:enter="transition ease-out duration-300"
+       x-transition:enter-start="opacity-0"
+       x-transition:enter-end="opacity-100"
+       x-transition:leave="transition ease-in duration-200"
+       x-transition:leave-start="opacity-100"
+       x-transition:leave-end="opacity-0"
+       class="fixed inset-0 z-50 bg-[#070707]/95 flex flex-col justify-between p-4 sm:p-6 md:p-10 backdrop-blur-2xl overflow-y-auto"
+       x-cloak>
+    
+    <!-- Lightbox Header -->
+    <div class="flex items-center justify-between w-full max-w-[1700px] mx-auto z-20 pb-4 border-b border-neutral-900 shrink-0">
+      <div class="flex items-center space-x-4 text-xs tracking-[0.25em] text-neutral-500 uppercase">
+        <span class="text-white font-medium" x-text="currentPhotoIndex + 1"></span>
+        <span>/</span>
+        <span x-text="filteredPhotos.length"></span>
+        <span class="hidden sm:inline-block border-l border-neutral-800 pl-4 font-serif-title text-base text-white capitalize" x-text="currentPhoto?.title"></span>
+      </div>
+
+      <button type="button" @click="closeLightbox()" class="p-2.5 rounded-full bg-brand-surface border border-neutral-800 text-neutral-400 hover:text-white hover:border-neutral-600 transition-all">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+
+    <!-- Lightbox Body -->
+    <div class="flex-grow flex flex-col lg:flex-row items-center justify-center w-full max-w-[1700px] mx-auto my-auto gap-6 relative py-4">
+      
+      <!-- Prev Navigation Button -->
+      <button type="button" @click.stop="prevPhoto()" class="absolute left-1 sm:left-4 z-30 p-2.5 sm:p-3 rounded-full bg-black/80 text-neutral-200 hover:text-white hover:bg-black border border-neutral-800 transition-all shadow-lg">
+        <i data-lucide="chevron-left" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+      </button>
+
+      <!-- Center Image View -->
+      <div class="flex-grow max-h-[50vh] lg:max-h-[78vh] w-full flex items-center justify-center px-8 sm:px-12">
+        <template x-if="currentPhoto">
+          <img :src="currentPhoto.url" 
+               :alt="currentPhoto.title"
+               class="max-h-[50vh] lg:max-h-[78vh] w-auto max-w-full object-contain rounded-lg shadow-2xl border border-neutral-800/50">
+        </template>
+      </div>
+
+      <!-- Next Navigation Button -->
+      <button type="button" @click.stop="nextPhoto()" class="absolute right-1 sm:right-4 z-30 p-2.5 sm:p-3 rounded-full bg-black/80 text-neutral-200 hover:text-white hover:bg-black border border-neutral-800 transition-all shadow-lg">
+        <i data-lucide="chevron-right" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+      </button>
+
+      <!-- Location & Info Sidebar -->
+      <template x-if="currentPhoto">
+        <div class="w-full lg:w-80 bg-brand-surface/90 border border-neutral-800 rounded-xl p-5 text-xs space-y-5 shrink-0 backdrop-blur-lg max-h-[40vh] lg:max-h-[78vh] overflow-y-auto">
+          <div class="border-b border-neutral-800 pb-4">
+            <span class="text-[10px] uppercase tracking-[0.25em] text-neutral-400 block mb-1" x-text="currentPhoto.vol[currentLang] || currentPhoto.vol.en"></span>
+            <h2 class="font-serif-title text-2xl text-white font-normal" x-text="currentPhoto.title"></h2>
+            <p class="text-neutral-400 text-[11px] mt-2 font-light leading-relaxed" x-text="currentPhoto.description[currentLang] || currentPhoto.description.en"></p>
+          </div>
+
+          <div class="space-y-3 pt-1">
+            <div class="text-[9px] uppercase tracking-[0.25em] text-neutral-500 font-normal" data-i18n="location-coords-label">LOCATION & COORDINATES</div>
+            <div>
+              <span class="text-white font-medium block text-sm uppercase tracking-[0.12em] mb-2.5" x-text="currentPhoto.location"></span>
+              <a :href="'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(currentPhoto.location + ' ' + currentPhoto.coords)" 
+                 target="_blank"
+                 class="inline-flex items-center gap-1.5 text-brand-gold hover:underline text-xs font-mono tracking-wider bg-neutral-900/80 border border-neutral-800 px-3 py-2 rounded-lg w-full justify-between transition-colors hover:border-brand-gold/50">
+                <span class="flex items-center gap-1.5">
+                  <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
+                  <span x-text="currentPhoto.coords"></span>
+                </span>
+                <i data-lucide="external-link" class="w-3.5 h-3.5 text-neutral-500"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <!-- Lightbox Footer Instruction -->
+    <div class="w-full text-center pt-2 border-t border-neutral-900 text-[10px] uppercase tracking-[0.3em] text-neutral-500 shrink-0" data-i18n="lightbox-hint">
+      USE ARROW KEYS OR BUTTONS TO NAVIGATE • ESC TO CLOSE
+    </div>
+  </div>
+
+  <!-- Editorial Footer (Pinned to page bottom) -->
+  <footer id="contact" class="relative z-30 mt-auto bg-black [.light_&]:bg-[#eaeaea] pt-10 pb-16 px-6 md:px-12 border-t border-neutral-900 [.light_&]:border-neutral-300 flex flex-col md:flex-row justify-between items-center text-neutral-500 text-xs transition-colors duration-300">
+    <div class="mb-4 md:mb-0 tracking-wider text-center md:text-left" data-i18n="footer-rights">
+      © 2026 MAX MA PHOTO COLLECTION. ALL RIGHTS RESERVED.
+    </div>
+    <div class="flex space-x-6 uppercase tracking-widest text-[10px]">
+      <a href="javascript:void(0);" class="hover:text-white [.light_&]:hover:text-black transition-colors">linkedin</a>
+    </div>
+  </footer>
+
+  <!-- App Data & Logic -->
+  <script>
+    // Global current language state ('en' | 'tc' | 'sc')
+    let currentLang = 'en';
+
+    function galleryApp() {
+      return {
+        gridCols: 3,
+        activeCategory: 'all',
+        lightboxOpen: false,
+        currentPhotoIndex: 0,
+        currentPhoto: null,
+        currentLang: 'en',
+        loadProgress: 12,
+        galleryReady: false,
+
+        categories: [
+          { id: 'all', label: { en: 'All', tc: '全部', sc: '全部' } },
+          { id: 'mountains', label: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' } },
+          { id: 'sunsets', label: { en: 'Sunsets', tc: '日落餘暉', sc: '日落余晖' } },
+          { id: 'culture', label: { en: 'Culture', tc: '人文印記', sc: '人文印记' } },
+          { id: 'forests', label: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' } },
+          { id: 'cascades', label: { en: 'Cascades', tc: '飛瀑流泉', sc: '飞瀑流泉' } }
+        ],
+
+        photos: [
+          // Cascades (1 - 13)
+          {
+            id: 1,
+            title: 'Travertine Steps',
+            vol: { en: 'Cascades', tc: '飛瀑流泉', sc: '飞瀑流泉' },
+            categoryId: 'cascades',
+            location: 'Plitvice Lakes, Croatia',
+            coords: '44.8654° N, 15.5820° E',
+            description: {
+              en: 'Crystal water spilling over mineral ledges in calm, tiered cadence.',
+              tc: '澄澈溪水沿著鈣華岩階層層跌落，呈現柔和而有節奏的水流層次。',
+              sc: '澄澈溪水沿着钙华岩阶层层跌落，呈现柔和而有节奏的水流层次。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Cascades-1.webp'
+          },
+          {
+            id: 2,
+            title: 'Valley Veil',
+            vol: { en: 'Cascades', tc: '飛瀑流泉', sc: '飞瀑流泉' },
+            categoryId: 'cascades',
+            location: 'Lauterbrunnen, Switzerland',
+            coords: '46.5935° N, 7.9091° E',
+            description: {
+              en: 'Fine mist drifting beside sheer alpine cliffs in cool valley air.',
+              tc: '細膩水霧在陡峭山壁旁輕盈散開，山谷間瀰漫清涼空氣。',
+              sc: '细腻水雾在陡峭山壁旁轻盈散开，山谷间弥漫清凉空气。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Cascades-2.webp'
+          },
+          {
+            id: 3,
+            title: 'Basalt Current',
+            vol: { en: 'Cascades', tc: '飛瀑流泉', sc: '飞瀑流泉' },
+            categoryId: 'cascades',
+            location: 'Skógafoss, Iceland',
+            coords: '63.5321° N, 19.5114° W',
+            description: {
+              en: 'White foam cutting cleanly against dark volcanic rock under northern light.',
+              tc: '雪白水花在深色火山岩襯托下顯得分明，北國天光清朗通透。',
+              sc: '雪白水花在深色火山岩衬托下显得分明，北国天光清朗通透。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Cascades-3.webp'
+          },
+          {
+            id: 4,
+            title: 'Mossy Shallows',
+            vol: { en: 'Cascades', tc: '飛瀑流泉', sc: '飞瀑流泉' },
+            categoryId: 'cascades',
+            location: 'Jiuzhaigou, Sichuan',
+            coords: '33.2600° N, 103.9186° E',
+            description: {
+              en: 'Clear highland water threading around moss-covered stones in quiet shade.',
+              tc: '清透高地溪水繞過覆苔石塊，在靜謐林蔭下緩緩流淌。',
+              sc: '清透高地溪水绕过覆苔石块，在静谧林荫下缓缓流淌。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Cascades-4.webp'
+          },
+          {
+            id: 5,
+            title: 'Granite Plunge',
+            vol: { en: 'Cascades', tc: '飛瀑流泉', sc: '飞瀑流泉' },
+            categoryId: 'cascades',
+            location: 'Yosemite Valley, California',
+            coords: '37.7456° N, 119.5936° W',
+            description: {
+              en: 'Soft spray catching daylight against monumental granite walls.',
+              tc: '細緻水花承接天光，在巍峨花崗岩壁前形成柔和光影。',
+              sc: '细致水花承接天光，在巍峨花岗岩壁前形成柔和光影。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Cascades-5.webp'
+          },
+          {
+            id: 6,
+            title: 'Fjord Descent',
+            vol: { en: 'Cascades', tc: '飛瀑流泉', sc: '飞瀑流泉' },
+            categoryId: 'cascades',
+            location: 'Geirangerfjord, Norway',
+            coords: '62.1008° N, 7.2059° E',
+            description: {
+              en: 'Mountain streams dropping into deep fjord water with quiet poise.',
+              tc: '山澗水流自高處傾瀉入深邃峽灣，動靜之間自成秩序。',
+              sc: '山涧水流自高处倾泻入深邃峡湾，动静之间自成秩序。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Cascades-6.webp'
+          },
+          {
+            id: 7,
+            title: 'Glacial Runnel',
+            vol: { en: 'Cascades', tc: '飛瀑流泉', sc: '飞瀑流泉' },
+            categoryId: 'cascades',
+            location: 'Banff, Alberta',
+            coords: '51.1784° N, 115.5708° W',
+            description: {
+              en: 'Cold meltwater tracing smooth channels through rocky alpine terrain.',
+              tc: '冰涼融水沿著岩石溝壑蜿蜒而下，展現高山水系的清冽質感。',
+              sc: '冰凉融水沿着岩石沟壑蜿蜒而下，展现高山水系的清冽质感。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Cascades-7.webp'
+          },
+          {
+            id: 8,
+            title: 'Marble Gorge Stream',
+            vol: { en: 'Cascades', tc: '飛瀑流泉', sc: '飞瀑流泉' },
+            categoryId: 'cascades',
+            location: 'Taroko Gorge, Hualien',
+            coords: '24.1583° N, 121.6254° E',
+            description: {
+              en: 'Cool canyon currents winding past steep marble formations.',
+              tc: '清涼峽谷溪流穿行於陡峭大理石岩壁之間，線條流暢沉穩。',
+              sc: '清凉峡谷溪流穿行于陡峭大理石岩壁之间，线条流畅沉稳。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Cascades-8.webp'
+          },
+          {
+            id: 9,
+            title: 'Rainforest Spill',
+            vol: { en: 'Cascades', tc: '飛瀑流泉', sc: '飞瀑流泉' },
+            categoryId: 'cascades',
+            location: 'Milford Sound, New Zealand',
+            coords: '44.6714° S, 167.9256° E',
+            description: {
+              en: 'Temporary rain cascades gliding down lush slopes into still water.',
+              tc: '雨後山坡湧出細流，沿著翠綠坡面滑入平靜水域。',
+              sc: '雨后山坡涌出细流，沿着翠绿坡面滑入平静水域。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Cascades-9.webp'
+          },
+          {
+            id: 10,
+            title: 'Limestone Thread',
+            vol: { en: 'Cascades', tc: '飛瀑流泉', sc: '飞瀑流泉' },
+            categoryId: 'cascades',
+            location: 'Dolomites, South Tyrol',
+            coords: '46.5405° N, 12.1357° E',
+            description: {
+              en: 'Slender alpine water lines catching subtle light across pale stone.',
+              tc: '纖細山泉在淺色岩石上折射微光，顯得靜謐而細膩。',
+              sc: '纤细山泉在浅色岩石上折射微光，显得静谧而细腻。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Cascades-10.webp'
+          },
+          {
+            id: 11,
+            title: 'Twin Tier Mist',
+            vol: { en: 'Cascades', tc: '飛瀑流泉', sc: '飞瀑流泉' },
+            categoryId: 'cascades',
+            location: 'Gullfoss, Iceland',
+            coords: '64.3271° N, 20.1200° W',
+            description: {
+              en: 'Layered currents plunging into a narrow gorge with rising spray.',
+              tc: '雙層水流傾瀉入狹窄峽谷，水霧升騰融入清朗高空。',
+              sc: '双层水流倾泻入狭窄峡谷，水雾升腾融入清朗高空。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Cascades-11.webp'
+          },
+          {
+            id: 12,
+            title: 'Highland Fall',
+            vol: { en: 'Cascades', tc: '飛瀑流泉', sc: '飞瀑流泉' },
+            categoryId: 'cascades',
+            location: 'Nikko, Tochigi',
+            coords: '36.7378° N, 139.5003° E',
+            description: {
+              en: 'Quiet highland water framed by surrounding greenery and soft shadow.',
+              tc: '高地飛瀑隱於林木綠意之中，在柔和陰影下顯得內斂沉靜。',
+              sc: '高地飞瀑隐于林木绿意之中，在柔和阴影下显得内敛沉静。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Cascades-12.webp'
+          },
+          {
+            id: 13,
+            title: 'Alpine Brook',
+            vol: { en: 'Cascades', tc: '飛瀑流泉', sc: '飞瀑流泉' },
+            categoryId: 'cascades',
+            location: 'Appenzell, Switzerland',
+            coords: '47.3317° N, 9.4086° E',
+            description: {
+              en: 'Crisp mountain spring water flowing over stones beneath bright air.',
+              tc: '清冽山泉流經石灘，在明亮空氣中呈現純淨流動感。',
+              sc: '清冽山泉流经石滩，在明亮空气中呈现纯净流动感。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Cascades-13.webp'
+          },
+
+          // Culture (14 - 37 -> Culture-1 to Culture-24)
+          {
+            id: 14,
+            title: 'Timber & Shadow',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'Kyoto, Japan',
+            coords: '35.0116° N, 135.7681° E',
+            description: {
+              en: 'Aged wood and quiet thresholds holding soft afternoon light.',
+              tc: '歲月木構與靜謐門檻承接柔和午後光影，散發沉靜氣息。',
+              sc: '岁月木构与静谧门槛承接柔和午后光影，散发沉静气息。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-1.webp'
+          },
+          {
+            id: 15,
+            title: 'Quiet Sanctuary Lane',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'Luang Prabang, Laos',
+            coords: '19.8836° N, 102.1350° E',
+            description: {
+              en: 'Shaded heritage walls and unhurried street rhythm in warm light.',
+              tc: '林蔭歷史牆面與從容街景，在暖光中顯得平和安寧。',
+              sc: '林荫历史墙面与从容街景，在暖光中显得平和安宁。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-2.webp'
+          },
+          {
+            id: 16,
+            title: 'Coastal Facade',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'Lisbon, Portugal',
+            coords: '38.7223° N, 9.1393° W',
+            description: {
+              en: 'Textured plaster and narrow lines shaped by Atlantic light and time.',
+              tc: '充滿肌理的牆面與狹窄巷線，在大西洋光影與時間中沉澱。',
+              sc: '充满肌理的墙面与狭窄巷线，在大西洋光影与时间中沉淀。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-3.webp'
+          },
+          {
+            id: 17,
+            title: 'Courtyard Stillness',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'Hoi An, Vietnam',
+            coords: '15.8801° N, 108.3380° E',
+            description: {
+              en: 'Weathered architectural details resting in calm evening shade.',
+              tc: '歷經歲月的建築細節靜靜佇立於暮色陰影之中。',
+              sc: '历经岁月的建筑细节静静伫立于暮色阴影之中。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-4.webp'
+          },
+          {
+            id: 18,
+            title: 'Craft & Proportion',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'Kanazawa, Ishikawa',
+            coords: '36.5613° N, 136.6562° E',
+            description: {
+              en: 'Restrained structural lines and soft light defining a calm interior.',
+              tc: '克制的結構線條與柔和光影，勾勒出沉靜而雅緻的空間感。',
+              sc: '克制的结构线条与柔和光影，勾勒出沉静而雅致的空间感。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-5.webp'
+          },
+          {
+            id: 19,
+            title: 'Earth & Pigment',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'Oaxaca, Mexico',
+            coords: '17.0732° N, 96.7266° W',
+            description: {
+              en: 'Warm earth tones and tactile surfaces rooted in local tradition.',
+              tc: '溫潤大地色調與手作肌理，展現植根於地方傳統的質感。',
+              sc: '温润大地色调与手作肌理，展现植根于地方传统的质感。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-6.webp'
+          },
+          {
+            id: 20,
+            title: 'Morning Threshold',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'Chiang Mai, Thailand',
+            coords: '18.7883° N, 98.9853° E',
+            description: {
+              en: 'Gentle morning rays falling across quiet temple geometry.',
+              tc: '柔和晨光灑落於靜謐建築線條之上，顯得溫和而莊重。',
+              sc: '柔和晨光洒落在静谧建筑线条之上，显得温和而庄重。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-7.webp'
+          },
+          {
+            id: 21,
+            title: 'Corridor of Time',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'Kyoto, Japan',
+            coords: '35.0116° N, 135.7681° E',
+            description: {
+              en: 'Traces of light moving through corridors of time, quietly preserving enduring chapters woven between land and human heritage.',
+              tc: '穿過時光廊道的光影痕跡，靜靜紀錄下大地與文化交織的永恆篇章。',
+              sc: '穿过时光廊道的光影痕迹，静静纪录下大地与文化交织的永恒篇章。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-8.webp'
+          },
+          {
+            id: 22,
+            title: 'Stone & Silence',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'Nara, Japan',
+            coords: '34.6851° N, 135.8048° E',
+            description: {
+              en: 'Ancient stone steps and quiet surroundings holding unhurried calm.',
+              tc: '古老石階與寧靜環境交織出從容沉穩的氛圍。',
+              sc: '古老石阶与宁静环境交织出从容沉稳的氛围。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-9.webp'
+          },
+          {
+            id: 23,
+            title: 'Carved Brick & Wood',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'Bhaktapur, Nepal',
+            coords: '27.6710° N, 85.4298° E',
+            description: {
+              en: 'Intricate traditional craftsmanship standing in quiet continuity.',
+              tc: '細緻傳統工藝在歲月中延續，留存深厚的歷史韻味。',
+              sc: '细致传统工艺在岁月中延续，留存深厚的历史韵味。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-10.webp'
+          },
+          {
+            id: 24,
+            title: 'Layered Alleyway',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'Porto, Portugal',
+            coords: '41.1579° N, 8.6291° W',
+            description: {
+              en: 'Overlapping historic elevations and narrow streets with quiet character.',
+              tc: '層疊的歷史立面與狹窄巷弄，展現低調而鮮明的城市輪廓。',
+              sc: '层叠的历史立面与狭窄巷弄，展现低调而鲜明的城市轮廓。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-11.webp'
+          },
+          {
+            id: 25,
+            title: 'Southern Street Memory',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'Tainan, Taiwan',
+            coords: '22.9997° N, 120.2270° E',
+            description: {
+              en: 'Everyday architectural details woven naturally into neighborhood life.',
+              tc: '日常建築細節自然融入街區生活，留存真實而親切的記憶。',
+              sc: '日常建筑细节自然融入街区生活，留存真实而亲切的记忆。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-12.webp'
+          },
+          {
+            id: 26,
+            title: 'Stone Arch & Reflection',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'Udaipur, Rajasthan',
+            coords: '24.5854° N, 73.7125° E',
+            description: {
+              en: 'Warm stone arches meeting calm water in balanced symmetry.',
+              tc: '溫潤石拱與平靜水面相互映照，呈現沉穩對稱的構圖。',
+              sc: '温润石拱与平静水面相互映照，呈现沉稳对称的构图。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-13.webp'
+          },
+          {
+            id: 27,
+            title: 'Afternoon Eaves',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'Takayama, Gifu',
+            coords: '36.1461° N, 137.2522° E',
+            description: {
+              en: 'Traditional eaves and quiet street lines softened by afternoon light.',
+              tc: '傳統屋簷與靜謐街線在午後光影下顯得柔和而深遠。',
+              sc: '传统屋檐与静谧街线在午后光影下显得柔和而深远。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-14.webp'
+          },
+          {
+            id: 28,
+            title: 'Blue Wall & Cool Shade',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'Chefchaouen, Morocco',
+            coords: '35.1688° N, 5.2636° W',
+            description: {
+              en: 'Cool painted walls and crisp shadows forming a calm visual rhythm.',
+              tc: '清涼色調牆面與俐落陰影交織出安靜而獨特的視覺節奏。',
+              sc: '清凉色调墙面与利落阴影交织出安静而独特的视觉节奏。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-15.webp'
+          },
+          {
+            id: 29,
+            title: 'Old Courtyard Brick',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'Pingyao, Shanxi',
+            coords: '37.1890° N, 112.1766° E',
+            description: {
+              en: 'Weathered courtyard masonry holding quiet traces of earlier eras.',
+              tc: '風化院落磚石靜靜承載著過往歲月的痕跡。',
+              sc: '风化院落砖石静静承载着往昔岁月的痕迹。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-16.webp'
+          },
+          {
+            id: 30,
+            title: 'Sunlit Masonry',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'Seville, Spain',
+            coords: '37.3891° N, 5.9845° W',
+            description: {
+              en: 'Warm stone textures and geometric shadows in clean contrast.',
+              tc: '溫潤石材紋理與幾何光影在明暗之間呈現清晰層次。',
+              sc: '温润石材纹理与几何光影在明暗之间呈现清晰层次。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-17.webp'
+          },
+          {
+            id: 31,
+            title: 'Coastal Shrine Calm',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'Kamakura, Kanagawa',
+            coords: '35.3192° N, 139.5467° E',
+            description: {
+              en: 'Quiet sacred spaces and coastal air bathed in soft daylight.',
+              tc: '幽靜神社空間與海濱空氣在柔和天光下顯得自然平和。',
+              sc: '幽静神社空间与海滨空气在柔和天光下显得自然平和。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-18.webp'
+          },
+          {
+            id: 32,
+            title: 'Highland Stonework',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'Cusco, Peru',
+            coords: '13.5319° S, 71.9675° W',
+            description: {
+              en: 'Fitted stone walls and high-altitude light speaking of enduring heritage.',
+              tc: '緊密咬合的石造牆面與高海拔天光，訴說歷久彌新的歷史底蘊。',
+              sc: '紧密咬合的石造墙面与高海拔天光，诉说历久弥新的历史底蕴。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-19.webp'
+          },
+          {
+            id: 33,
+            title: 'Poised Heritage Line',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'Matsumoto, Nagano',
+            coords: '36.2380° N, 137.9720° E',
+            description: {
+              en: 'Quiet historic lines and clear highland air in poised balance.',
+              tc: '沉靜的歷史線條與清朗高地空氣在構圖中保持端莊平衡。',
+              sc: '沉静的历史线条与清朗高地空气在构图中保持端庄平衡。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-20.webp'
+          },
+          {
+            id: 34,
+            title: 'Plain & Brick Silhouette',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'Bagan, Myanmar',
+            coords: '21.1717° N, 94.8585° E',
+            description: {
+              en: 'Earthy brick forms rising softly across a wide, quiet plain.',
+              tc: '質樸磚砌輪廓在廣闊平原上悄然升起，散發沉靜氣息。',
+              sc: '质朴砖砌轮廓在广阔平原上悄然升起，散发沉静气息。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-21.webp'
+          },
+          {
+            id: 35,
+            title: 'Slate & Hillslope',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'Gjirokastër, Albania',
+            coords: '40.0758° N, 20.1389° E',
+            description: {
+              en: 'Stone roofs and hillside homes anchored naturally along the slope.',
+              tc: '石板屋頂與山坡聚落順應地勢而建，呈現堅實質樸之美。',
+              sc: '石板屋顶与山坡聚落顺应地势而建，呈现坚实质朴之美。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-22.webp'
+          },
+          {
+            id: 36,
+            title: 'Verdant Sanctuary',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'Kandy, Sri Lanka',
+            coords: '7.2906° N, 80.6337° E',
+            description: {
+              en: 'Lush surrounding foliage framing calm sacred architecture.',
+              tc: '蔥鬱林木環抱靜謐建築，在柔和光線中顯得安詳沉穩。',
+              sc: '葱郁林木环抱静谧建筑，在柔和光线中显得安详沉稳。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-23.webp'
+          },
+          {
+            id: 37,
+            title: 'Mountain Timber Trace',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'Alishan, Chiayi',
+            coords: '23.5100° N, 120.8025° E',
+            description: {
+              en: 'Highland forest memory and cool mountain mist in subtle tones.',
+              tc: '山林歲月痕跡與清涼山嵐，在細膩色調中呈現靜謐韻味。',
+              sc: '山林岁月痕迹与清凉山岚，在细腻色调中展现静谧韵味。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-24.webp'
+          },
+
+          // Forests (38 - 63 -> Forests-1 to Forests-26)
+          {
+            id: 38,
+            title: 'Canopy & Filtered Light',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'Hokkaido, Japan',
+            coords: '43.2203° N, 142.8635° E',
+            description: {
+              en: 'Dense woodland canopy filtering soft light onto the quiet floor.',
+              tc: '茂密林冠將柔和光線篩落至靜謐林地，層次自然深邃。',
+              sc: '茂密林冠将柔和光线筛落至静谧林地，层次自然深邃。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-1.webp'
+          },
+          {
+            id: 39,
+            title: 'Evergreen Cadence',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'Black Forest, Germany',
+            coords: '48.3000° N, 8.1500° E',
+            description: {
+              en: 'Tall conifers rising in quiet rhythm through woodland mist.',
+              tc: '高聳針葉林在靜謐山霧中整齊排列，展現深邃林間秩序。',
+              sc: '高耸针叶林在静谧山雾中整齐排列，展现深邃林间秩序。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-2.webp'
+          },
+          {
+            id: 40,
+            title: 'Vertical Grove',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'Arashiyama, Kyoto',
+            coords: '35.0094° N, 135.6668° E',
+            description: {
+              en: 'Upright stems and dappled shade creating a contemplative passage.',
+              tc: '挺拔林木與斑駁光影交錯，形成沉靜而富於哲思的林徑。',
+              sc: '挺拔林木与斑驳光影交错，形成沉静而富于哲思的林径。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-3.webp'
+          },
+          {
+            id: 41,
+            title: 'Moss & Damp Earth',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'Olympic Peninsula, Washington',
+            coords: '47.8021° N, 123.6044° W',
+            description: {
+              en: 'Moss-covered branches and cool air evoking quiet woodland depth.',
+              tc: '覆滿青苔的枝幹與清涼空氣，喚起深邃而沉靜的林間氛圍。',
+              sc: '覆满青苔的枝干与清凉空气，唤起深邃而沉静的林间氛围。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-4.webp'
+          },
+          {
+            id: 42,
+            title: 'Alpine Waterside Grove',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'Kamikochi, Nagano',
+            coords: '36.2489° N, 137.6347° E',
+            description: {
+              en: 'Highland trees lining calm water under clear mountain light.',
+              tc: '高山林木沿著平靜水域伸展，在明淨山光下顯得清幽。',
+              sc: '高山林木沿着平静水域伸展，在明净山光下显得清幽。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-5.webp'
+          },
+          {
+            id: 43,
+            title: 'Ancient Woodland Texture',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'Białowieża, Poland',
+            coords: '52.7000° N, 23.8667° E',
+            description: {
+              en: 'Untamed forest textures holding quiet endurance across seasons.',
+              tc: '原始林地紋理在四季更迭中展現靜默而持久的生命力。',
+              sc: '原始林地纹理在四季更迭中展现静默而持久的生命力。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-6.webp'
+          },
+          {
+            id: 44,
+            title: 'Cedar in Mist',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'Yakushima, Kagoshima',
+            coords: '30.3556° N, 130.5306° E',
+            description: {
+              en: 'Old cedar silhouettes emerging gently through humid mountain mist.',
+              tc: '古老杉木輪廓在濕潤山霧中緩緩浮現，顯得幽靜深遠。',
+              sc: '古老杉木轮廓在湿润山雾中缓缓浮现，显得幽静深远。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-7.webp'
+          },
+          {
+            id: 45,
+            title: 'Spring Clearing Light',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'Hallerbos, Belgium',
+            coords: '50.7031° N, 4.2775° E',
+            description: {
+              en: 'Soft seasonal leaves and gentle light brightening the woodland.',
+              tc: '柔和春葉與林間光影為森林帶來溫和而明亮的氣息。',
+              sc: '柔和春叶与林间光影为森林带来温和而明亮的气息。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-8.webp'
+          },
+          {
+            id: 46,
+            title: 'Highland Autumn Shift',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'Daisetsuzan, Hokkaido',
+            coords: '43.6636° N, 142.8539° E',
+            description: {
+              en: 'Crisp northern air and subtle seasonal color across highland trees.',
+              tc: '清冽北國空氣與高地林木的細膩季候色調相互映襯。',
+              sc: '清冽北国空气与高地林木的细腻季候色调相互映衬。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-9.webp'
+          },
+          {
+            id: 47,
+            title: 'Deep Conifer Shadow',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'Pacific Northwest, Oregon',
+            coords: '44.0521° N, 123.0868° W',
+            description: {
+              en: 'Layered evergreens and dark woodland depths in calm balance.',
+              tc: '層疊常綠林木與幽深林影在靜謐中保持沉穩平衡。',
+              sc: '层叠常绿林木与幽深林影在静谧中保持沉稳平衡。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-10.webp'
+          },
+          {
+            id: 48,
+            title: 'Drifting Mountain Fog',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'Xitou, Nantou',
+            coords: '23.6667° N, 120.7950° E',
+            description: {
+              en: 'Cool mist moving softly between tall trunks and quiet undergrowth.',
+              tc: '清涼山嵐在高聳樹幹與靜謐林下植被間緩緩流動。',
+              sc: '清凉山岚在高耸树干与静谧林下植被间缓缓流动。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-11.webp'
+          },
+          {
+            id: 49,
+            title: 'Tyrolean Timber Slope',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'Tyrol, Austria',
+            coords: '47.2537° N, 11.6015° E',
+            description: {
+              en: 'Forest slopes rising toward crisp alpine air and calm light.',
+              tc: '林坡向著清冽高山空氣與柔和光線延伸，顯得沉靜開闊。',
+              sc: '林坡向着清冽高山空气与柔和光线延伸，显得沉静开阔。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-12.webp'
+          },
+          {
+            id: 50,
+            title: 'Highland Shade',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'Karuizawa, Nagano',
+            coords: '36.3484° N, 138.5972° E',
+            description: {
+              en: 'Quiet woodland groves and soft dappled shade in peaceful air.',
+              tc: '靜謐樹叢與柔和斑駁樹蔭，在平和空氣中顯得從容。',
+              sc: '静谧树丛与柔和斑驳树荫，在平和空气中显得从容。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-13.webp'
+          },
+          {
+            id: 51,
+            title: 'Boreal Pine Quiet',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'Nuuksio, Finland',
+            coords: '60.3000° N, 24.5500° E',
+            description: {
+              en: 'Northern pines and quiet ground cover in serene daylight.',
+              tc: '北方松林與靜謐林地在安寧天光下舒展，顯得純淨。',
+              sc: '北方松林与静谧林地在安宁天光下舒展，显得纯净。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-14.webp'
+          },
+          {
+            id: 52,
+            title: 'Tall Trunk Perspective',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'Redwood National Park, California',
+            coords: '41.2132° N, 124.0046° W',
+            description: {
+              en: 'Towering trunks and diffused light creating quiet spatial depth.',
+              tc: '高聳樹幹與柔和漫射光交織出沉靜而深遠的空間感。',
+              sc: '高耸树干与柔和漫射光交织出沉静而深远的空间感。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-15.webp'
+          },
+          {
+            id: 53,
+            title: 'Coastal Woods Edge',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'Shiretoko, Hokkaido',
+            coords: '44.0667° N, 145.1000° E',
+            description: {
+              en: 'Wild forest edges meeting crisp northern sea air.',
+              tc: '原始林緣迎向清冽北國海風，展現純粹自然張力。',
+              sc: '原始林缘迎向清冽北国海风，展现纯粹自然张力。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-16.webp'
+          },
+          {
+            id: 54,
+            title: 'Bavarian Woodland Calm',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'Bavaria, Germany',
+            coords: '47.7981° N, 11.4090° E',
+            description: {
+              en: 'Gentle forest contours resting in soft, unhurried light.',
+              tc: '平緩林木輪廓在柔和天光下顯得自然從容。',
+              sc: '平缓林木轮廓在柔和天光下显得自然从容。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-17.webp'
+          },
+          {
+            id: 55,
+            title: 'Subtle Woodland Tone',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'Aomori, Tohoku',
+            coords: '40.8222° N, 140.7474° E',
+            description: {
+              en: 'Soft shadow and quiet foliage tones in gentle harmony.',
+              tc: '柔和陰影與靜謐林葉色調在畫面中取得自然和諧。',
+              sc: '柔和阴影与静谧林叶色调在画面中取得自然和谐。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-18.webp'
+          },
+          {
+            id: 56,
+            title: 'Nordic Stone & Moss',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'Småland, Sweden',
+            coords: '57.1200° N, 14.8000° E',
+            description: {
+              en: 'Boulders, forest floor moss, and calm northern light.',
+              tc: '林間巨石、青苔與平靜北國光線交織出安寧意境。',
+              sc: '林间巨石、青苔与平静北国光线交织出安宁意境。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-19.webp'
+          },
+          {
+            id: 57,
+            title: 'Evergreen Mist Ridge',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'Taipingshan, Yilan',
+            coords: '24.4964° N, 121.5339° E',
+            description: {
+              en: 'Mountain fog curling quietly through high forest ridges.',
+              tc: '山嵐輕繞高海拔林稜，在靜謐氛圍中呈現深沉層次。',
+              sc: '山岚轻绕高海拔林棱，在静谧氛围中呈现深沉层次。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-20.webp'
+          },
+          {
+            id: 58,
+            title: 'Northern Windbreak',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'Lofoten, Norway',
+            coords: '68.1028° N, 13.5658° E',
+            description: {
+              en: 'Resilient coastal trees standing against crisp arctic light.',
+              tc: '堅韌海岸林木迎向清冽極北天光，顯得沉著純粹。',
+              sc: '坚韧海岸林木迎向清冽极北天光，显得沉着纯粹。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-21.webp'
+          },
+          {
+            id: 59,
+            title: 'Soft Mountain Canopy',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'Chichibu, Saitama',
+            coords: '35.9917° N, 139.0856° E',
+            description: {
+              en: 'Layered mountain greenery bathed in gentle daylight.',
+              tc: '層疊山林綠意沐浴在柔和天光下，散發溫潤生命力。',
+              sc: '层叠山林绿意沐浴在柔和天光下，散发温润生命力。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-22.webp'
+          },
+          {
+            id: 60,
+            title: 'Broad Highland Woods',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'Kootenay, British Columbia',
+            coords: '50.8800° N, 116.0300° W',
+            description: {
+              en: 'Wide forest ridges stretching beneath clear mountain air.',
+              tc: '廣闊林稜在明淨山氣下延展，呈現開闊而沉靜的景深。',
+              sc: '广阔林棱在明净山气下延展，展现开阔而沉静的景深。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-23.webp'
+          },
+          {
+            id: 61,
+            title: 'Volcanic Path Shade',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'Hakone, Kanagawa',
+            coords: '35.2324° N, 139.1069° E',
+            description: {
+              en: 'Quiet woodland paths shaded by tall, steady trees.',
+              tc: '火山林間小徑在挺拔林木庇蔭下顯得幽靜而深遠。',
+              sc: '火山林间小径在挺拔林木庇荫下显得幽静而深远。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-24.webp'
+          },
+          {
+            id: 62,
+            title: 'Nordic Horizon',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'Reykjavík, Iceland',
+            coords: '64.1466° N, 21.9426° W',
+            description: {
+              en: 'A quiet northern horizon and frozen wilderness poetry suspended in stillness.',
+              tc: '寂靜極北地平線，冰封與靜止的荒野森林詩篇。',
+              sc: '寂静极北地平线，冰封与静止的荒野森林诗篇。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-25.webp'
+          },
+          {
+            id: 63,
+            title: 'Subalpine Stillness',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'Tateshina, Nagano',
+            coords: '36.1050° N, 138.2850° E',
+            description: {
+              en: 'Highland trees resting in crisp air and quiet light.',
+              tc: '高地林木在清冽空氣與柔和光線中靜立，顯得純淨安寧。',
+              sc: '高地林木在清冽空气与柔和光线中静立，显得纯净安宁。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-26.webp'
+          },
+
+          // Mountains (64 - 85 -> Mountains-1 to Mountains-22)
+          {
+            id: 64,
+            title: 'Arctic Peak & Stillness',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'Lofoten, Norway',
+            coords: '68.1028° N, 13.5658° E',
+            description: {
+              en: 'Sharp northern peaks rising above quiet water in crisp light.',
+              tc: '冷冽北國山峰聳立於平靜水域之上，在清朗光線中顯得分明。',
+              sc: '冷冽北国山峰耸立于平静水域之上，在清朗光线中显得分明。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-1.webp'
+          },
+          {
+            id: 65,
+            title: 'Limestone Ridge Shadow',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'Dolomites, Italy',
+            coords: '46.4102° N, 11.8440° E',
+            description: {
+              en: 'Sculpted rock ridges holding cool shadow and atmospheric depth.',
+              tc: '雕刻般的石灰岩山稜承接清冷陰影，展現深邃的大氣層次。',
+              sc: '雕刻般的石灰岩山棱承接清冷阴影，展现深邃的大气层次。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-2.webp'
+          },
+          {
+            id: 66,
+            title: 'High Alpine Horizon',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'Swiss Alps, Valais',
+            coords: '46.0207° N, 7.7491° E',
+            description: {
+              en: 'High mountain ridges and clear cold air framing a steady horizon.',
+              tc: '高阿爾卑斯山稜與清冷空氣，勾勒出沉穩而遼闊的山脈天際。',
+              sc: '高阿尔卑斯山棱与清冷空气，勾勒出沉稳而辽阔的山脉天际。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-3.webp'
+          },
+          {
+            id: 67,
+            title: 'Southern Wind & Peak',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'Patagonia, Chile',
+            coords: '50.9423° S, 73.4068° W',
+            description: {
+              en: 'Sweeping southern summits and shifting clouds across open terrain.',
+              tc: '壯闊南境山峰與隨風流動的雲層，在廣袤天地間展開自然張力。',
+              sc: '壮阔南境山峰与随风流动的云层，在广袤天地间展开自然张力。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-4.webp'
+          },
+          {
+            id: 68,
+            title: 'Morning Ridge & Valley',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'Yushan, Nantou & Chiayi',
+            coords: '23.4700° N, 120.9573° E',
+            description: {
+              en: 'High mountain ridges and layered valleys emerging in morning light.',
+              tc: '高聳山脊與層疊溪谷在晨光中逐漸清晰，顯得沉靜遼闊。',
+              sc: '高耸山脊与层叠溪谷在晨光中逐渐清晰，显得沉静辽阔。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-5.webp'
+          },
+          {
+            id: 69,
+            title: 'Glacial Mirror Basin',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'Lake Louise, Alberta',
+            coords: '51.4254° N, 116.1773° W',
+            description: {
+              en: 'Still alpine water reflecting high peaks under quiet skies.',
+              tc: '平靜高山湖水映照巍峨群峰，在高地天光下顯得澄澈安寧。',
+              sc: '平静高山湖水映照巍峨群峰，在高地天光下显得澄澈安宁。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-6.webp'
+          },
+          {
+            id: 70,
+            title: 'Steep Highland Massif',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'Tateyama, Toyama',
+            coords: '36.5761° N, 137.6214° E',
+            description: {
+              en: 'Steep slopes and cool air holding a quiet, monumental presence.',
+              tc: '陡峭山坡與清冷空氣交織出沉穩而莊嚴的自然氣勢。',
+              sc: '陡峭山坡与清冷空气交织出沉稳而庄严的自然气势。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-7.webp'
+          },
+          {
+            id: 71,
+            title: 'Northern Ridge Contrast',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'Jotunheimen, Norway',
+            coords: '61.6300° N, 8.3100° E',
+            description: {
+              en: 'Highland ridges and cold stillness in clean tonal contrast.',
+              tc: '高地山稜與冰川靜謐以純淨色調對比呈現，顯得冷冽清晰。',
+              sc: '高地山棱与冰川静谧以纯净色调对比呈现，显得冷冽清晰。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-8.webp'
+          },
+          {
+            id: 72,
+            title: 'Mountains & Lakes',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'Lofoten, Norway',
+            coords: '68.1028° N, 13.5658° E',
+            description: {
+              en: 'Textures of mountain shadows and glacial waters capturing the crisp rhythm of light across the far north, where polar nights and midnight sun shape pure natural stillness.',
+              tc: '山影與冰川湖水交融的紋理，紀錄極北荒原冷冽的光影節奏。這裡有非常漫長的極夜與極晝，光線在山巔與峽灣之間流轉，呈現出令人屏息的純粹自然之美。',
+              sc: '山影与冰川湖水交融的纹理，纪录极北荒原冷冽的光影节奏。这里有非常漫长的极夜与极昼，光线在山巅与峡湾之间流转，呈现出令人屏息的纯粹自然之美。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-9.webp'
+          },
+          {
+            id: 73,
+            title: 'Drifting Cloud Slope',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'Hehuanshan, Nantou',
+            coords: '24.1389° N, 121.2756° E',
+            description: {
+              en: 'High-altitude contours and quiet clouds passing over open slopes.',
+              tc: '高海拔山勢與靜謐雲霧在開闊山坡間緩緩流轉。',
+              sc: '高海拔山势与静谧云雾在开阔山坡间缓缓流转。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-10.webp'
+          },
+          {
+            id: 74,
+            title: 'Alpine Geometry & Shade',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'Bernese Oberland, Switzerland',
+            coords: '46.5582° N, 7.9876° E',
+            description: {
+              en: 'Crisp mountain forms and deep valley shadows in calm balance.',
+              tc: '清晰的阿爾卑斯山體線條與深邃谷影，在靜謐中保持平衡。',
+              sc: '清晰的阿尔卑斯山体线条与深邃谷影，在静谧中保持平衡。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-11.webp'
+          },
+          {
+            id: 75,
+            title: 'Open Rocky Horizon',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'Senjōgatake, Nagano',
+            coords: '35.7244° N, 138.1806° E',
+            description: {
+              en: 'Broad mountain lines and clean light over rocky highland ground.',
+              tc: '開闊山脈線條與明淨天光，掠過岩石高地地形。',
+              sc: '开阔山脉线条与明净天光，掠过岩石高地地形。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-12.webp'
+          },
+          {
+            id: 76,
+            title: 'Three Limestone Spires',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'Tre Cime di Lavaredo, Italy',
+            coords: '46.6186° N, 12.3028° E',
+            description: {
+              en: 'Towering rock spires standing in quiet contrast against pale sky.',
+              tc: '高聳岩峰在淡雅高空襯托下顯得挺拔而沉靜。',
+              sc: '高耸岩峰在淡雅高空衬托下显得挺拔而沉静。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-13.webp'
+          },
+          {
+            id: 77,
+            title: 'Turquoise Basin & Range',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'Lake Tekapo, New Zealand',
+            coords: '44.0047° S, 170.4771° E',
+            description: {
+              en: 'Calm glacial water reflecting distant peaks under clear light.',
+              tc: '平靜冰川湖水映照遠方山脈，在清朗光影中顯得純淨遼闊。',
+              sc: '平静冰川湖水映照远方山脉，在清朗光影中显得纯净辽阔。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-14.webp'
+          },
+          {
+            id: 78,
+            title: 'Island Cone & Water',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'Rishiri Island, Hokkaido',
+            coords: '45.1822° N, 141.2425° E',
+            description: {
+              en: 'Symmetrical volcanic slopes rising cleanly above quiet water.',
+              tc: '對稱火山坡面自平靜水面上俐落升起，呈現純粹輪廓。',
+              sc: '对称火山坡面自平静水面上利落升起，呈现纯粹轮廓。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-15.webp'
+          },
+          {
+            id: 79,
+            title: 'Jagged Crest & Plain',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'Grand Teton, Wyoming',
+            coords: '43.7904° N, 110.6818° W',
+            description: {
+              en: 'Sharp mountain crests meeting calm flats in poised scale.',
+              tc: '峭拔山峰與平緩平原相遇，勾勒出尺度與光影交融的畫面。',
+              sc: '峭拔山峰与平缓平原相遇，勾勒出尺度与光影交融的画面。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-16.webp'
+          },
+          {
+            id: 80,
+            title: 'High Valley & Summit',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'Siguniangshan, Sichuan',
+            coords: '31.1000° N, 102.8333° E',
+            description: {
+              en: 'High mountain peaks and serene valleys in crisp alpine air.',
+              tc: '高山峻嶺與靜謐山谷在清冽空氣中展現沉穩輪廓。',
+              sc: '高山峻岭与静谧山谷在清冽空气中展现沉稳轮廓。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-17.webp'
+          },
+          {
+            id: 81,
+            title: 'Glacial Ridge & Light',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'Zermatt, Switzerland',
+            coords: '46.0207° N, 7.7491° E',
+            description: {
+              en: 'High mountain massifs catching clear light and quiet shadow.',
+              tc: '高海拔山塊迎向明淨天光與靜謐陰影，顯得沉著而宏大。',
+              sc: '高海拔山块迎向明净天光与静谧阴影，显得沉着而宏大。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-18.webp'
+          },
+          {
+            id: 82,
+            title: 'Arctic Shore Silhouette',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'Tromsø, Norway',
+            coords: '69.6492° N, 18.9553° E',
+            description: {
+              en: 'Northern mountain silhouettes resting quietly by cold water.',
+              tc: '北極山巒輪廓靜靜佇立於冷冽水域旁，散發清寂之美。',
+              sc: '北极山峦轮廓静静伫立于冷冽水域旁，散发清寂之美。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-19.webp'
+          },
+          {
+            id: 83,
+            title: 'Volcanic Highland Sky',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'Norikura, Nagano & Gifu',
+            coords: '36.1064° N, 137.5542° E',
+            description: {
+              en: 'Gentle volcanic highlands and wide skies in quiet harmony.',
+              tc: '平緩火山高地與寬闊天際相互呼應，呈現自然平和。',
+              sc: '平缓火山高地与宽阔天际相互呼应，呈现自然平和。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-20.webp'
+          },
+          {
+            id: 84,
+            title: 'Carved Alpine Basin',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'Glacier National Park, Montana',
+            coords: '48.7596° N, 113.7870° W',
+            description: {
+              en: 'Glacial walls and quiet basins holding crisp natural light.',
+              tc: '受冰川雕琢的山壁與靜謐高山盆地，留存清朗自然光影。',
+              sc: '受冰川雕琢的山壁与静谧高山盆地，留存清朗自然光影。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-21.webp'
+          },
+          {
+            id: 85,
+            title: 'Meadow & Crag',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'Alpe di Siusi, Italy',
+            coords: '46.5442° N, 11.6231° E',
+            description: {
+              en: 'Broad highland meadows meeting rugged peaks in soft light.',
+              tc: '開闊高山草甸與嶙峋山峰相遇，在柔和光影中顯得遼闊靜謐。',
+              sc: '开阔高山草甸与嶙峋山峰相遇，在柔和光影中显得辽阔静谧。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-22.webp'
+          },
+
+          // Sunsets (86 - 100 -> Sunsets-1 to Sunsets-15)
+          {
+            id: 86,
+            title: 'Alpine Dusk Glow',
+            vol: { en: 'Sunsets', tc: '日落餘暉', sc: '日落余晖' },
+            categoryId: 'sunsets',
+            location: 'Dolomites, Italy',
+            coords: '46.4102° N, 11.8440° E',
+            description: {
+              en: 'Warm evening light brushing mountain ridges as daylight fades.',
+              tc: '天光緩緩退去之際，溫暖夕照輕拂山稜，染出柔和餘暉。',
+              sc: '天光缓缓退去之际，温暖夕照轻拂山棱，染出柔和余晖。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Sunsets-1.webp'
+          },
+          {
+            id: 87,
+            title: 'Low Northern Sun',
+            vol: { en: 'Sunsets', tc: '日落餘暉', sc: '日落余晖' },
+            categoryId: 'sunsets',
+            location: 'Lofoten, Norway',
+            coords: '68.1028° N, 13.5658° E',
+            description: {
+              en: 'Low northern sun casting long, gentle tones across water.',
+              tc: '低垂北國斜陽在水面與海岸之間拉出柔和而深長的色調。',
+              sc: '低垂北国斜阳在水面与海岸之间拉出柔和而深长的色调。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Sunsets-2.webp'
+          },
+          {
+            id: 88,
+            title: 'Aegean Twilight',
+            vol: { en: 'Sunsets', tc: '日落餘暉', sc: '日落余晖' },
+            categoryId: 'sunsets',
+            location: 'Santorini, Greece',
+            coords: '36.3932° N, 25.4615° E',
+            description: {
+              en: 'Golden dusk settling over calm sea horizons in quiet transition.',
+              tc: '金黃暮色在平靜海天交界處沉澱，展現靜謐的日夜交替。',
+              sc: '金黄暮色在平静海天交界处沉淀，展现静谧的日夜交替。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Sunsets-3.webp'
+          },
+          {
+            id: 89,
+            title: 'Caldera Evening Amber',
+            vol: { en: 'Sunsets', tc: '日落餘暉', sc: '日落余晖' },
+            categoryId: 'sunsets',
+            location: 'Aso, Kumamoto',
+            coords: '32.8842° N, 131.1041° E',
+            description: {
+              en: 'Wide volcanic grasslands catching soft amber light toward dusk.',
+              tc: '廣闊火山草原在傍晚時分承接柔和琥珀色光線，顯得開闊溫潤。',
+              sc: '广阔火山草原在傍晚时分承接柔和琥珀色光线，显得开阔温润。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Sunsets-4.webp'
+          },
+          {
+            id: 90,
+            title: 'Coastal Dusk Reflection',
+            vol: { en: 'Sunsets', tc: '日落餘暉', sc: '日落余晖' },
+            categoryId: 'sunsets',
+            location: 'Amalfi Coast, Italy',
+            coords: '40.6333° N, 14.6029° E',
+            description: {
+              en: 'Coastal silhouettes and warm reflections glowing softly at dusk.',
+              tc: '海岸剪影與溫潤倒影在暮色中散發柔和光澤。',
+              sc: '海岸剪影与温润倒影在暮色中散发柔和光泽。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Sunsets-5.webp'
+          },
+          {
+            id: 91,
+            title: 'Still Lake Twilight',
+            vol: { en: 'Sunsets', tc: '日落餘暉', sc: '日落余晖' },
+            categoryId: 'sunsets',
+            location: 'Lake Biwa, Shiga',
+            coords: '35.2600° N, 136.1300° E',
+            description: {
+              en: 'Calm lake water mirroring layered twilight hues across the sky.',
+              tc: '平靜湖面映照天際層疊暮色，呈現深邃而寧靜的倒影。',
+              sc: '平静湖面映照天际层叠暮色，呈现深邃而宁静的倒影。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Sunsets-6.webp'
+          },
+          {
+            id: 92,
+            title: 'Pacific Cliff Glow',
+            vol: { en: 'Sunsets', tc: '日落餘暉', sc: '日落余晖' },
+            categoryId: 'sunsets',
+            location: 'Big Sur, California',
+            coords: '36.2704° N, 121.8081° W',
+            description: {
+              en: 'Ocean swells and coastal cliffs bathed in fading golden light.',
+              tc: '太平洋浪湧與海岸峭壁沐浴在漸退的金黃餘暉之中。',
+              sc: '太平洋浪涌与海岸峭壁沐浴在渐退的金黄余晖之中。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Sunsets-7.webp'
+          },
+          {
+            id: 93,
+            title: 'Rolling Hill Warmth',
+            vol: { en: 'Sunsets', tc: '日落餘暉', sc: '日落余晖' },
+            categoryId: 'sunsets',
+            location: 'Val d’Orcia, Tuscany',
+            coords: '43.0667° N, 11.6167° E',
+            description: {
+              en: 'Gentle hills and quiet silhouettes softened by late afternoon light.',
+              tc: '起伏丘陵與靜謐剪影在午後尾聲的暖意中顯得柔和。',
+              sc: '起伏丘陵与静谧剪影在午后尾声的暖意中显得柔和。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Sunsets-8.webp'
+          },
+          {
+            id: 94,
+            title: 'Quiet Shore Gradient',
+            vol: { en: 'Sunsets', tc: '日落餘暉', sc: '日落余晖' },
+            categoryId: 'sunsets',
+            location: 'Kōchi, Shikoku',
+            coords: '33.5597° N, 133.5311° E',
+            description: {
+              en: 'Calm coastal air and soft sky gradients at the close of day.',
+              tc: '靜謐海風與柔和天光漸層，為一天的光影寫下平靜句點。',
+              sc: '静谧海风与柔和天光渐层，为一天的光影写下平静句点。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Sunsets-9.webp'
+          },
+          {
+            id: 95,
+            title: 'Golden Hour & Sunsets',
+            vol: { en: 'Sunsets', tc: '日落餘暉', sc: '日落余晖' },
+            categoryId: 'sunsets',
+            location: 'Dolomites, Italy',
+            coords: '46.4102° N, 11.8440° E',
+            description: {
+              en: 'The fleeting moment when warm evening sunlight grazes the horizon, washing alpine peaks and water in rich layers of amber and gold.',
+              tc: '溫暖斜陽劃過地平線的瞬間，將山嶺與水面染上層次豐富的金黃餘暉。',
+              sc: '温暖斜阳划过地平线的瞬间，将山岭与水面染上层次丰富的金黄余晖。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Sunsets-10.webp'
+          },
+          {
+            id: 96,
+            title: 'High Desert Dusk',
+            vol: { en: 'Sunsets', tc: '日落餘暉', sc: '日落余晖' },
+            categoryId: 'sunsets',
+            location: 'Atacama, Chile',
+            coords: '23.8634° S, 69.1328° W',
+            description: {
+              en: 'Clear arid air and warm horizon light creating luminous tones.',
+              tc: '澄澈乾燥的空氣與溫暖地平線光線，勾勒出通透而沉靜的色調。',
+              sc: '澄澈干燥的空气与温暖地平线光线，勾勒出通透而沉静的色调。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Sunsets-11.webp'
+          },
+          {
+            id: 97,
+            title: 'Inland Sea Silhouette',
+            vol: { en: 'Sunsets', tc: '日落餘暉', sc: '日落余晖' },
+            categoryId: 'sunsets',
+            location: 'Seto Inland Sea, Okayama',
+            coords: '34.6617° N, 133.9350° E',
+            description: {
+              en: 'Calm island outlines resting in quiet twilight across still water.',
+              tc: '平靜海面上島嶼剪影在暮色中顯得安寧而深遠。',
+              sc: '平静海面上岛屿剪影在暮色中显得安宁而深远。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Sunsets-12.webp'
+          },
+          {
+            id: 98,
+            title: 'Western Peninsula Glow',
+            vol: { en: 'Sunsets', tc: '日落餘暉', sc: '日落余晖' },
+            categoryId: 'sunsets',
+            location: 'Snæfellsnes, Iceland',
+            coords: '64.8000° N, 23.3500° W',
+            description: {
+              en: 'Wide western skies and quiet coastal lines catching evening light.',
+              tc: '開闊西境天際與靜謐海岸線迎來柔和傍晚光暈。',
+              sc: '开阔西境天际与静谧海岸线迎来柔和傍晚光晕。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Sunsets-13.webp'
+          },
+          {
+            id: 99,
+            title: 'Evening Roof & Hill',
+            vol: { en: 'Sunsets', tc: '日落餘暉', sc: '日落余晖' },
+            categoryId: 'sunsets',
+            location: 'Kyoto, Japan',
+            coords: '35.0116° N, 135.7681° E',
+            description: {
+              en: 'Subtle evening warmth settling over quiet rooftops and hills.',
+              tc: '細膩暮色暖意輕覆靜謐屋瓦與遠方山丘，顯得溫和沉靜。',
+              sc: '细腻暮色暖意轻覆静谧屋瓦与远方山丘，显得温和沉静。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Sunsets-14.webp'
+          },
+          {
+            id: 100,
+            title: 'Dune Shadow at Dusk',
+            vol: { en: 'Sunsets', tc: '日落餘暉', sc: '日落余晖' },
+            categoryId: 'sunsets',
+            location: 'Namib Desert, Namibia',
+            coords: '24.7289° S, 15.2914° E',
+            description: {
+              en: 'Sculpted dunes and quiet shadow lines glowing softly as dusk falls.',
+              tc: '沙丘曲線與靜謐陰影線條在暮色降臨時散發柔和光芒。',
+              sc: '沙丘曲线与静谧阴影线条在暮色降临时散发柔和光芒。'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Sunsets-15.webp'
+          }
+        ],
+
+        get filteredPhotos() {
+          if (this.activeCategory === 'all') return this.photos;
+          return this.photos.filter(p => p.categoryId === this.activeCategory);
+        },
+
+        shuffleArray(list) {
+          const arr = [...list];
+          for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+          }
+          return arr;
+        },
+
+        initLoadingSequence() {
+          this.loadProgress = 28;
+          const initialBatch = this.photos.slice(0, 12);
+          let settled = 0;
+
+          const finishLoading = () => {
+            if (this.galleryReady) return;
+            this.loadProgress = 100;
+            setTimeout(() => {
+              this.galleryReady = true;
+            }, 220);
+          };
+
+          const onOneSettled = () => {
+            settled += 1;
+            const ratio = Math.min(92, 28 + Math.round((settled / initialBatch.length) * 64));
+            if (ratio > this.loadProgress) this.loadProgress = ratio;
+            if (settled >= initialBatch.length) finishLoading();
+          };
+
+          initialBatch.forEach((photo) => {
+            const img = new Image();
+            img.decoding = 'async';
+            img.onload = () => {
+              if (img.decode) {
+                img.decode().catch(() => {}).finally(onOneSettled);
+              } else {
+                onOneSettled();
+              }
+            };
+            img.onerror = onOneSettled;
+            img.src = photo.url;
+          });
+
+          window.addEventListener('load', () => {
+            this.loadProgress = Math.max(this.loadProgress, 85);
+            setTimeout(finishLoading, 250);
+          }, { once: true });
+
+          setTimeout(finishLoading, 1800);
+        },
+
+        initApp() {
+          this.photos = this.shuffleArray(this.photos);
+          this.currentLang = currentLang;
+          this.initLoadingSequence();
+
+          window.addEventListener('language-changed', (e) => {
+            this.currentLang = e.detail.lang;
+            this.$nextTick(() => lucide.createIcons());
+          });
+
+          this.$nextTick(() => lucide.createIcons());
+          this.$watch('activeCategory', () => {
+            this.$nextTick(() => lucide.createIcons());
+          });
+          this.$watch('gridCols', () => {
+            this.$nextTick(() => lucide.createIcons());
+          });
+        },
+
+        openLightbox(photo) {
+          this.currentPhoto = photo;
+          this.currentPhotoIndex = this.filteredPhotos.findIndex(p => p.id === photo.id);
+          this.lightboxOpen = true;
+          document.body.style.overflow = 'hidden';
+          this.$nextTick(() => lucide.createIcons());
+        },
+
+        closeLightbox() {
+          this.lightboxOpen = false;
+          document.body.style.overflow = 'auto';
+        },
+
+        nextPhoto() {
+          if (this.filteredPhotos.length === 0) return;
+          this.currentPhotoIndex = (this.currentPhotoIndex + 1) % this.filteredPhotos.length;
+          this.currentPhoto = this.filteredPhotos[this.currentPhotoIndex];
+        },
+
+        prevPhoto() {
+          if (this.filteredPhotos.length === 0) return;
+          this.currentPhotoIndex = (this.currentPhotoIndex - 1 + this.filteredPhotos.length) % this.filteredPhotos.length;
+          this.currentPhoto = this.filteredPhotos[this.currentPhotoIndex];
+        }
+      }
+    }
+
+    // Theme Toggle Logic (Black <-> White mode)
+    function toggleTheme() {
+      const htmlElement = document.documentElement;
+      const sunIcon = document.getElementById('sun-icon');
+      const moonIcon = document.getElementById('moon-icon');
+      const mobThemeDark = document.getElementById('mob-theme-dark');
+      const mobThemeLight = document.getElementById('mob-theme-light');
+
+      htmlElement.classList.toggle('light');
+      const isLight = htmlElement.classList.contains('light');
+
+      if (sunIcon && moonIcon) {
+        if (isLight) {
+          sunIcon.classList.remove('hidden');
+          sunIcon.classList.add('block');
+          moonIcon.classList.remove('block');
+          moonIcon.classList.add('hidden');
+        } else {
+          sunIcon.classList.remove('block');
+          sunIcon.classList.add('hidden');
+          moonIcon.classList.remove('hidden');
+          moonIcon.classList.add('block');
+        }
+      }
+
+      if (mobThemeDark && mobThemeLight) {
+        if (isLight) {
+          mobThemeDark.classList.add('hidden');
+          mobThemeLight.classList.remove('hidden');
+        } else {
+          mobThemeDark.classList.remove('hidden');
+          mobThemeLight.classList.add('hidden');
+        }
+      }
+
+      lucide.createIcons();
+    }
+
+    // Mobile Menu Toggle Logic
+    function toggleMobileMenu() {
+      const mobileMenu = document.getElementById('mobile-menu');
+      const menuIcon = document.getElementById('menu-icon');
+      const closeIcon = document.getElementById('close-icon');
+
+      const isOpen = mobileMenu.classList.contains('opacity-100');
+
+      if (isOpen) {
+        mobileMenu.classList.remove('opacity-100', 'pointer-events-auto');
+        mobileMenu.classList.add('opacity-0', 'pointer-events-none');
+        menuIcon.classList.remove('hidden');
+        menuIcon.classList.add('block');
+        closeIcon.classList.remove('block');
+        closeIcon.classList.add('hidden');
+        document.body.style.overflow = '';
+      } else {
+        mobileMenu.classList.remove('opacity-0', 'pointer-events-none');
+        mobileMenu.classList.add('opacity-100', 'pointer-events-auto');
+        menuIcon.classList.remove('block');
+        menuIcon.classList.add('hidden');
+        closeIcon.classList.remove('hidden');
+        closeIcon.classList.add('block');
+        document.body.style.overflow = 'hidden';
+      }
+      lucide.createIcons();
+    }
+
+    // EN / 繁 / 簡 Translation Dictionary & Logic
+    const translations = {
+      en: {
+        "brand-name": "MaxMa Collection",
+        "edition-badge": "EDITION 2026",
+        "nav-home": "Home",
+        "nav-gallery": "Gallery",
+        "nav-perspectives": "Photobooks",
+        "nav-exhibition": "Virtual Space",
+        "theme-dark": "DARK MODE",
+        "theme-light": "LIGHT MODE",
+        "loading-text": "LOADING...",
+        "empty-gallery": "NO PHOTOGRAPHS FOUND IN THIS CATEGORY.",
+        "location-coords-label": "LOCATION & COORDINATES",
+        "lightbox-hint": "USE ARROW KEYS OR BUTTONS TO NAVIGATE • ESC TO CLOSE",
+        "footer-rights": "© 2026 MAX MA PHOTO COLLECTION. ALL RIGHTS RESERVED."
+      },
+      tc: {
+        "brand-name": "MaxMa Collection",
+        "edition-badge": "EDITION 2026",
+        "nav-home": "首頁",
+        "nav-gallery": "光影藝廊",
+        "nav-perspectives": "攝影集",
+        "nav-exhibition": "虛擬展廳",
+        "theme-dark": "深色模式",
+        "theme-light": "淺色模式",
+        "loading-text": "載入中...",
+        "empty-gallery": "此分類目前沒有相片。",
+        "location-coords-label": "拍攝地點與座標",
+        "lightbox-hint": "使用方向鍵或按鈕切換 • 按 ESC 關閉",
+        "footer-rights": "© 2026 MAX MA 攝影典藏集．版權所有。"
+      }
+    };
+
+    function setLanguage(lang) {
+      currentLang = lang;
+      document.documentElement.lang = lang === 'en' ? 'en' : (lang === 'sc' ? 'zh-CN' : 'zh-HK');
+
+      const btnEn = document.getElementById('lang-en');
+      const btnTc = document.getElementById('lang-tc');
+      const btnSc = document.getElementById('lang-sc');
+
+      const mobBtnEn = document.getElementById('mob-lang-en');
+      const mobBtnTc = document.getElementById('mob-lang-tc');
+      const mobBtnSc = document.getElementById('mob-lang-sc');
+
+      [btnEn, btnTc, btnSc, mobBtnEn, mobBtnTc, mobBtnSc].forEach(b => {
+        if (b) b.className = "hover:text-white [.light_&]:hover:text-black transition-colors";
+      });
+
+      if (lang === 'en') {
+        if (btnEn) btnEn.className = "text-white [.light_&]:text-black font-medium transition-colors";
+        if (mobBtnEn) mobBtnEn.className = "text-white [.light_&]:text-black font-medium transition-colors";
+        applyTranslations(translations.en);
+      } else if (lang === 'tc') {
+        if (btnTc) btnTc.className = "text-white [.light_&]:text-black font-medium transition-colors";
+        if (mobBtnTc) mobBtnTc.className = "text-white [.light_&]:text-black font-medium transition-colors";
+        applyTranslations(translations.tc);
+      } else if (lang === 'sc') {
+        if (btnSc) btnSc.className = "text-white [.light_&]:text-black font-medium transition-colors";
+        if (mobBtnSc) mobBtnSc.className = "text-white [.light_&]:text-black font-medium transition-colors";
+
+        const converter = OpenCC.Converter({ from: 'hk', to: 'cn' });
+        const scDict = {};
+        for (let key in translations.tc) {
+          scDict[key] = converter(translations.tc[key]);
+        }
+        applyTranslations(scDict);
+      }
+
+      window.dispatchEvent(new CustomEvent('language-changed', { detail: { lang } }));
+    }
+
+    function applyTranslations(dict) {
+      const elements = document.querySelectorAll('[data-i18n]');
+      elements.forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (dict[key]) {
+          el.innerHTML = dict[key];
+        }
+      });
+    }
+
+    // Initialize icons and default English language on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      setLanguage('en');
+    });
+  </script>
+</body>
+</html>

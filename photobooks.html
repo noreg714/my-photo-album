@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Photobooks — THE MA COLLECTION | MAX MA COLLECTION</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              bg: '#0d0d0d',
+              surface: '#141414',
+              card: '#111111',
+              border: '#222222',
+              muted: '#888888',
+              gold: '#D4AF37'
+            }
+          },
+          fontFamily: {
+            serif: ['Cormorant Garamond', 'Georgia', 'serif'],
+            sans: ['Montserrat', 'Helvetica', 'Arial', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts: Cormorant Garamond & Montserrat -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Montserrat:ital,wght@0,200;0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- OpenCC-js for Traditional/Simplified Chinese Conversion -->
+  <script src="https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/full.js"></script>
+
+  <style>
+    :root {
+      --band-primary: #0D0D0D;
+      --band-secondary: #070707;
+      --band-line: rgba(255, 255, 255, 0.12);
+      --focus-rule: rgba(255, 255, 255, 0.14);
+    }
+
+    .light {
+      --band-primary: #F7F7F7;
+      --band-secondary: #EEEEEE;
+      --band-line: rgba(23, 23, 23, 0.14);
+      --focus-rule: rgba(23, 23, 23, 0.14);
+    }
+
+    body {
+      background-color: var(--band-primary);
+      color: #e6e6e6;
+      font-family: 'Montserrat', sans-serif;
+      overflow-x: hidden;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .light body {
+      color: #1a1a1a;
+    }
+
+    .font-serif-title {
+      font-family: 'Cormorant Garamond', serif;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0d0d0d;
+    }
+    .light ::-webkit-scrollbar-track {
+      background: #f7f7f7;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #333333;
+      border-radius: 3px;
+    }
+    .light ::-webkit-scrollbar-thumb {
+      background: #cccccc;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #555555;
+    }
+    .light ::-webkit-scrollbar-thumb:hover {
+      background: #999999;
+    }
+
+    /* Glassmorphism Header */
+    #site-header {
+      background: rgba(13, 13, 13, 0.72);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(34, 34, 34, 0.6);
+      transition: background 0.3s ease, backdrop-filter 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+    }
+
+    #site-header.glass-nav {
+      background: rgba(13, 13, 13, 0.9);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(34, 34, 34, 1);
+    }
+
+    .light #site-header {
+      background: rgba(247, 247, 247, 0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(229, 229, 229, 0.9);
+      color: #525252;
+    }
+
+    .light #site-header a,
+    .light #site-header button,
+    .light #site-header span {
+      color: #525252;
+    }
+
+    .light #site-header .header-brand-title,
+    .light #site-header .lang-active {
+      color: #111111;
+    }
+
+    .light #site-header #theme-toggle {
+      border-color: rgba(163, 163, 163, 0.7);
+    }
+
+    .light #site-header a:hover,
+    .light #site-header button:hover {
+      color: #000000;
+      border-color: #171717;
+    }
+
+    /* Right-Edge Persistent 01 - 04 Jump Rail (Early Slow Right-to-Left Entrance) */
+    #side-book-index {
+      position: fixed;
+      right: 1.5rem;
+      top: 50%;
+      transform: translate3d(42px, -50%, 0);
+      z-index: 40;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.95rem;
+      opacity: 0;
+      will-change: transform, opacity;
+    }
+
+    @media (max-width: 767px) {
+      #side-book-index {
+        right: 0.75rem;
+        gap: 0.65rem;
+      }
+    }
+
+    .side-book-link {
+      position: relative;
+      overflow: hidden;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      min-width: 3.4rem;
+      padding: 0.45rem 1.05rem;
+      border-radius: 9999px;
+      background: rgba(18, 18, 18, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.13);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      color: #8a8a8a;
+      transition:
+        color 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+        border-color 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+        background-color 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+        gap 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+        padding 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .light .side-book-link {
+      background: rgba(255, 255, 255, 0.85);
+      border-color: rgba(23, 23, 23, 0.14);
+      color: #666666;
+    }
+
+    .side-book-link.is-active {
+      color: #f3f3f3;
+      border-color: rgba(255, 255, 255, 0.48);
+    }
+
+    .light .side-book-link.is-active {
+      color: #111111;
+      border-color: rgba(23, 23, 23, 0.55);
+    }
+
+    .side-book-link:hover,
+    .side-book-link:focus-visible {
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.85);
+      outline: none;
+    }
+
+    .light .side-book-link:hover,
+    .light .side-book-link:focus-visible {
+      color: #000000;
+      border-color: #171717;
+    }
+
+    .side-book-label {
+      max-width: 0;
+      opacity: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      font-size: 10px;
+      letter-spacing: 0.26em;
+      text-transform: uppercase;
+      transition:
+        max-width 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+        opacity 0.6s ease 0.1s;
+    }
+
+    .side-book-link.is-active,
+    .side-book-link:hover,
+    .side-book-link:focus-visible {
+      gap: 0.75rem;
+      padding-left: 1.3rem;
+      padding-right: 1.3rem;
+    }
+
+    .side-book-link.is-active .side-book-label,
+    .side-book-link:hover .side-book-label,
+    .side-book-link:focus-visible .side-book-label {
+      max-width: 240px;
+      opacity: 1;
+    }
+
+    @media (max-width: 767px) {
+      .side-book-link,
+      .side-book-link.is-active,
+      .side-book-link:hover,
+      .side-book-link:focus-visible {
+        gap: 0;
+        min-width: 2.8rem;
+        padding: 0.4rem 0.75rem;
+      }
+
+      .side-book-link.is-active .side-book-label,
+      .side-book-link:hover .side-book-label,
+      .side-book-link:focus-visible .side-book-label {
+        max-width: 0;
+        opacity: 0;
+      }
+    }
+
+    .side-book-num {
+      font-size: 10px;
+      letter-spacing: 0.25em;
+      font-weight: 500;
+      line-height: 1;
+      white-space: nowrap;
+      text-align: center;
+    }
+
+    /* Uniform Height & Generous Top/Bottom Padding Across All 4 Photobook Sections */
+    .book-band {
+      display: flex;
+      align-items: center;
+      min-height: 75vh;
+      padding: 3.5rem 1.25rem;
+      transition: background-color 0.35s ease;
+    }
+
+    @media (min-width: 901px) {
+      .book-band {
+        min-height: calc(100vh - 5rem);
+        padding: 8.5rem 4rem;
+      }
+    }
+
+    .book-band--primary {
+      background-color: var(--band-primary);
+    }
+
+    .book-band--secondary {
+      background-color: var(--band-secondary);
+    }
+
+    .book-split-divider {
+      width: 100%;
+      height: 1px;
+      background-color: var(--band-line);
+    }
+
+    /* Short Solid Hairline Divider Above Focus (No Gradient) */
+    .book-focus-divider {
+      width: 2rem;
+      height: 1px;
+      background-color: var(--focus-rule);
+      margin-bottom: 0.75rem;
+    }
+
+    /* Equal-Height Cover Stage so 16:9, 1:1, 4:5, 3:2 Keep Identical Vertical Rhythm */
+    .book-cover-stage {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+    }
+
+    @media (min-width: 901px) {
+      .book-cover-stage {
+        height: 450px;
+      }
+    }
+
+    /* Reference WP Block Columns Layout */
+    .wp-block-columns.alignwide.is-layout-flex.wp-container-core-columns-is-layout-6447b870.wp-block-columns-is-layout-flex {
+      display: flex;
+      flex-wrap: nowrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 3.5rem;
+      max-width: 1280px;
+      margin-left: auto;
+      margin-right: auto;
+      width: 100%;
+    }
+
+    .wp-block-columns.alignwide.is-layout-flex.wp-container-core-columns-is-layout-6447b870.wp-block-columns-is-layout-flex.is-reverse {
+      flex-direction: row-reverse;
+    }
+
+    .wp-block-columns.alignwide.is-layout-flex.wp-container-core-columns-is-layout-6447b870.wp-block-columns-is-layout-flex > .wp-block-column {
+      flex: 1 1 0%;
+      min-width: 0;
+    }
+
+    @media (max-width: 900px) {
+      .wp-block-columns.alignwide.is-layout-flex.wp-container-core-columns-is-layout-6447b870.wp-block-columns-is-layout-flex,
+      .wp-block-columns.alignwide.is-layout-flex.wp-container-core-columns-is-layout-6447b870.wp-block-columns-is-layout-flex.is-reverse {
+        flex-direction: column;
+        gap: 1.75rem;
+      }
+    }
+
+    /* Photobook Spine & Cover Elevation */
+    .book-frame {
+      box-shadow:
+        -12px 18px 36px rgba(0, 0, 0, 0.65),
+        inset 3px 0 6px rgba(255, 255, 255, 0.08),
+        inset -2px 0 4px rgba(0, 0, 0, 0.45);
+    }
+
+    .light .book-frame {
+      box-shadow:
+        -10px 16px 32px rgba(0, 0, 0, 0.14),
+        inset 3px 0 6px rgba(255, 255, 255, 0.25),
+        inset -2px 0 4px rgba(0, 0, 0, 0.12);
+    }
+  </style>
+</head>
+<body class="selection:bg-white selection:text-black">
+
+  <!-- Fixed Header Navigation -->
+  <header id="site-header" class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-6 md:px-12 py-3.5 md:py-6">
+    <div class="flex items-center space-x-3 w-1/2 md:w-1/4">
+      <a href="index.html" class="header-brand-title text-xs uppercase tracking-[0.3em] font-medium text-white" data-i18n="brand-name">MaxMa Collection</a>
+      <span class="text-[10px] text-neutral-400 border border-neutral-700 px-2 py-0.5 rounded-full hidden sm:inline-block">EDITION 2026</span>
+    </div>
+
+    <!-- Header Navigation Center (Desktop) -->
+    <nav class="hidden md:flex justify-center space-x-8 text-xs tracking-[0.2em] uppercase text-neutral-300 w-2/4 text-center">
+      <a href="index.html#hero" class="hover:text-white transition-colors" data-i18n="nav-home">Home</a>
+      <a href="gallery.html" class="hover:text-white transition-colors" data-i18n="nav-gallery">Gallery</a>
+      <a href="photobooks.html" class="text-white font-medium transition-colors" data-i18n="nav-perspectives">Photobooks</a>
+      <a href="exhibition.html" class="hover:text-white transition-colors" data-i18n="nav-exhibition">Virtual Space</a>
+    </nav>
+
+    <!-- Right Side Controls -->
+    <div class="flex justify-end items-center space-x-4 w-1/2 md:w-1/4">
+      <div class="hidden md:flex items-center space-x-2 text-[10px] uppercase tracking-[0.15em] text-neutral-300">
+        <button id="lang-en" onclick="setLanguage('en')" class="lang-active text-white font-medium transition-colors">EN</button>
+        <span class="text-neutral-600">/</span>
+        <button id="lang-tc" onclick="setLanguage('tc')" class="hover:text-white transition-colors">繁</button>
+        <span class="text-neutral-600">/</span>
+        <button id="lang-sc" onclick="setLanguage('sc')" class="hover:text-white transition-colors">简</button>
+      </div>
+
+      <button id="theme-toggle" onclick="toggleTheme()" class="hidden md:flex items-center justify-center w-8 h-8 rounded-full border border-neutral-700 hover:border-white text-neutral-300 hover:text-white transition-all duration-300" aria-label="Toggle Theme">
+        <i data-lucide="sun" id="sun-icon" class="w-3.5 h-3.5 hidden"></i>
+        <i data-lucide="moon" id="moon-icon" class="w-3.5 h-3.5 block"></i>
+      </button>
+
+      <button id="mobile-menu-btn" onclick="toggleMobileMenu()" class="md:hidden flex items-center justify-center w-8 h-8 text-neutral-300 hover:text-white transition-colors" aria-label="Open Menu">
+        <i data-lucide="menu" id="menu-icon" class="w-5 h-5 block"></i>
+        <i data-lucide="x" id="close-icon" class="w-5 h-5 hidden"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Mobile Menu Overlay -->
+  <div id="mobile-menu" class="fixed inset-0 bg-[#0d0d0d] [.light_&]:bg-[#f7f7f7] z-40 flex flex-col justify-center items-center space-y-8 text-sm uppercase tracking-[0.3em] text-neutral-300 [.light_&]:text-neutral-700 opacity-0 pointer-events-none transition-all duration-300 md:hidden">
+    <a href="index.html#hero" onclick="toggleMobileMenu()" class="hover:text-white [.light_&]:hover:text-black transition-colors" data-i18n="nav-home">Home</a>
+    <a href="gallery.html" onclick="toggleMobileMenu()" class="hover:text-white [.light_&]:hover:text-black transition-colors" data-i18n="nav-gallery">Gallery</a>
+    <a href="photobooks.html" onclick="toggleMobileMenu()" class="text-white [.light_&]:text-black font-medium transition-colors" data-i18n="nav-perspectives">Photobooks</a>
+    <a href="exhibition.html" onclick="toggleMobileMenu()" class="hover:text-white [.light_&]:hover:text-black transition-colors" data-i18n="nav-exhibition">Virtual Space</a>
+
+    <div class="w-12 h-[1px] bg-neutral-800 [.light_&]:bg-neutral-300 my-2"></div>
+
+    <div class="flex items-center space-x-3 text-xs tracking-[0.2em]">
+      <button id="mob-lang-en" onclick="setLanguage('en'); toggleMobileMenu();" class="text-white [.light_&]:text-black font-medium transition-colors">EN</button>
+      <span class="text-neutral-600">/</span>
+      <button id="mob-lang-tc" onclick="setLanguage('tc'); toggleMobileMenu();" class="hover:text-white [.light_&]:hover:text-black transition-colors">繁</button>
+      <span class="text-neutral-600">/</span>
+      <button id="mob-lang-sc" onclick="setLanguage('sc'); toggleMobileMenu();" class="hover:text-white [.light_&]:hover:text-black transition-colors">简</button>
+    </div>
+
+    <button onclick="toggleTheme();" class="flex items-center space-x-2 text-xs tracking-[0.2em] text-neutral-400 hover:text-white [.light_&]:hover:text-black transition-colors pt-2">
+      <span id="mob-theme-dark" class="flex items-center space-x-2">
+        <i data-lucide="moon" class="w-4 h-4"></i>
+        <span class="text-[10px] uppercase">DARK MODE</span>
+      </span>
+      <span id="mob-theme-light" class="flex items-center space-x-2 hidden">
+        <i data-lucide="sun" class="w-4 h-4"></i>
+        <span class="text-[10px] uppercase">LIGHT MODE</span>
+      </span>
+    </button>
+  </div>
+
+  <!-- Persistent Right-Side 01 - 04 Jump Rail -->
+  <aside id="side-book-index" aria-label="Photobooks 01 to 04 Navigation">
+    <a href="#vol-01" data-book-target="vol-01" class="side-book-link is-active" title="01 · The Anthology">
+      <span class="side-book-label" data-i18n="rail-01">The Anthology</span>
+      <span class="side-book-num">01</span>
+    </a>
+    <a href="#vol-02" data-book-target="vol-02" class="side-book-link" title="02 · Primitive Real">
+      <span class="side-book-label" data-i18n="rail-02">Primitive Real</span>
+      <span class="side-book-num">02</span>
+    </a>
+    <a href="#vol-03" data-book-target="vol-03" class="side-book-link" title="03 · Corridors of Antiquity">
+      <span class="side-book-label" data-i18n="rail-03">Corridors of Antiquity</span>
+      <span class="side-book-num">03</span>
+    </a>
+    <a href="#vol-04" data-book-target="vol-04" class="side-book-link" title="04 · Golden Afterglow">
+      <span class="side-book-label" data-i18n="rail-04">Golden Afterglow</span>
+      <span class="side-book-num">04</span>
+    </a>
+  </aside>
+
+  <!-- Main 4 Photobooks Showcase with Alternating Backgrounds & Center Line -->
+  <main class="pt-14 md:pt-20">
+
+    <!-- BOOK 1: VOL. 01 — THE ANTHOLOGY (1920 x 1080 -> 16:9) -->
+    <section id="vol-01" class="book-band book-band--primary scroll-mt-14 md:scroll-mt-20">
+      <article class="book-entry wp-block-columns alignwide is-layout-flex wp-container-core-columns-is-layout-6447b870 wp-block-columns-is-layout-flex">
+        <div class="wp-block-column book-cover-stage">
+          <div class="book-frame group relative w-full max-w-[520px] aspect-[16/9] rounded-md overflow-hidden bg-neutral-900 border border-neutral-800/80 [.light_&]:border-neutral-200 block">
+            <img src="https://noreg714.github.io/my-photo-album/images/photobooks/maxma-photobook-01a.webp"
+                 alt="THE ANTHOLOGY"
+                 class="w-full h-full object-cover brightness-90 contrast-110 transition-transform duration-700 ease-out group-hover:scale-105">
+          </div>
+        </div>
+
+        <div class="wp-block-column flex flex-col justify-center">
+          <span class="text-xs uppercase tracking-[0.3em] text-neutral-500 mb-3">
+            VOL. 01
+          </span>
+          <h2 class="font-serif-title text-3xl sm:text-5xl font-light text-white [.light_&]:text-neutral-900 mb-5" data-i18n="b1-title">
+            THE ANTHOLOGY
+          </h2>
+          <p class="max-w-[33rem] text-xs sm:text-sm text-neutral-400 [.light_&]:text-neutral-600 leading-relaxed font-light mb-5" data-i18n="b1-desc">
+            The Anthology gathers defining photographs and reflections across two decades, bringing together foundational moments where light, distance, and quiet observation form a lasting visual archive.
+          </p>
+          <div class="book-focus-divider" aria-hidden="true"></div>
+          <div class="text-[10px] tracking-[0.14em] text-neutral-600 [.light_&]:text-neutral-400 font-light mb-8">
+            <span class="block uppercase tracking-[0.2em] mb-1" data-i18n="label-focus">Focus</span>
+            <span class="block" data-i18n="b1-focus">Crafted Through Years of Light &amp; Stillness</span>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-3.5">
+            <a href="e-book-a.html" class="inline-flex items-center space-x-3 text-xs uppercase tracking-[0.25em] text-neutral-300 [.light_&]:text-neutral-700 border border-neutral-700 [.light_&]:border-neutral-300 px-8 py-4 rounded-full hover:border-white hover:text-white [.light_&]:hover:border-neutral-900 [.light_&]:hover:text-black transition-all duration-300">
+              <span data-i18n="btn-read-online">Read E-Book</span>
+              <i data-lucide="book-open" class="w-4 h-4"></i>
+            </a>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <div class="book-split-divider" role="separator" aria-hidden="true"></div>
+
+    <!-- BOOK 2: VOL. 02 — PRIMITIVE REAL (1500 x 1500 -> 1:1) -->
+    <section id="vol-02" class="book-band book-band--secondary scroll-mt-14 md:scroll-mt-20">
+      <article class="book-entry wp-block-columns alignwide is-layout-flex wp-container-core-columns-is-layout-6447b870 wp-block-columns-is-layout-flex is-reverse">
+        <div class="wp-block-column book-cover-stage">
+          <div class="book-frame group relative w-full max-w-[440px] aspect-square rounded-md overflow-hidden bg-neutral-900 border border-neutral-800/80 [.light_&]:border-neutral-200 block">
+            <img src="https://noreg714.github.io/my-photo-album/images/photobooks/maxma-photobook-02a.webp"
+                 alt="PRIMITIVE REAL"
+                 class="w-full h-full object-cover brightness-85 contrast-125 transition-transform duration-700 ease-out group-hover:scale-105">
+          </div>
+        </div>
+
+        <div class="wp-block-column flex flex-col justify-center">
+          <span class="text-xs uppercase tracking-[0.3em] text-neutral-500 mb-3">
+            VOL. 02
+          </span>
+          <h2 class="font-serif-title text-3xl sm:text-5xl font-light text-white [.light_&]:text-neutral-900 mb-5" data-i18n="b2-title">
+            PRIMITIVE REAL
+          </h2>
+          <p class="max-w-[33rem] text-xs sm:text-sm text-neutral-400 [.light_&]:text-neutral-600 leading-relaxed font-light mb-5" data-i18n="b2-desc">
+            Primitive Real turns toward raw, untamed landscapes and elemental terrain, capturing the unvarnished presence of stone, mist, and open wilderness before human intervention.
+          </p>
+          <div class="book-focus-divider" aria-hidden="true"></div>
+          <div class="text-[10px] tracking-[0.14em] text-neutral-600 [.light_&]:text-neutral-400 font-light mb-8">
+            <span class="block uppercase tracking-[0.2em] mb-1" data-i18n="label-focus">Focus</span>
+            <span class="block" data-i18n="b2-focus">Elemental Terrain &amp; Untamed Wilderness</span>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-3.5">
+            <a href="e-book-b.html" class="inline-flex items-center space-x-3 text-xs uppercase tracking-[0.25em] text-neutral-300 [.light_&]:text-neutral-700 border border-neutral-700 [.light_&]:border-neutral-300 px-8 py-4 rounded-full hover:border-white hover:text-white [.light_&]:hover:border-neutral-900 [.light_&]:hover:text-black transition-all duration-300">
+              <span data-i18n="btn-read-online">Read E-Book</span>
+              <i data-lucide="book-open" class="w-4 h-4"></i>
+            </a>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <div class="book-split-divider" role="separator" aria-hidden="true"></div>
+
+    <!-- BOOK 3: VOL. 03 — CORRIDORS OF ANTIQUITY (1080 x 1350 -> 4:5) -->
+    <section id="vol-03" class="book-band book-band--primary scroll-mt-14 md:scroll-mt-20">
+      <article class="book-entry wp-block-columns alignwide is-layout-flex wp-container-core-columns-is-layout-6447b870 wp-block-columns-is-layout-flex">
+        <div class="wp-block-column book-cover-stage">
+          <a href="e-book.html" class="book-frame group relative w-full max-w-[360px] aspect-[4/5] rounded-md overflow-hidden bg-neutral-900 border border-neutral-800/80 [.light_&]:border-neutral-200 block">
+            <img src="https://noreg714.github.io/my-photo-album/images/photobooks/maxma-photobook-03a.webp"
+                 alt="CORRIDORS OF ANTIQUITY"
+                 class="w-full h-full object-cover brightness-90 contrast-115 transition-transform duration-700 ease-out group-hover:scale-105">
+          </a>
+        </div>
+
+        <div class="wp-block-column flex flex-col justify-center">
+          <span class="text-xs uppercase tracking-[0.3em] text-neutral-500 mb-3">
+            VOL. 03
+          </span>
+          <h2 class="font-serif-title text-3xl sm:text-5xl font-light text-white [.light_&]:text-neutral-900 mb-5" data-i18n="b3-title">
+            CORRIDORS OF ANTIQUITY
+          </h2>
+          <p class="max-w-[33rem] text-xs sm:text-sm text-neutral-400 [.light_&]:text-neutral-600 leading-relaxed font-light mb-5" data-i18n="b3-desc">
+            Corridors of Antiquity explores aged passages, weathered stonework, and enduring cultural sanctuaries where history lingers quietly through shadow, proportion, and time.
+          </p>
+          <div class="book-focus-divider" aria-hidden="true"></div>
+          <div class="text-[10px] tracking-[0.14em] text-neutral-600 [.light_&]:text-neutral-400 font-light mb-8">
+            <span class="block uppercase tracking-[0.2em] mb-1" data-i18n="label-focus">Focus</span>
+            <span class="block" data-i18n="b3-focus">Historic Passages &amp; Quiet Sanctuaries</span>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-3.5">
+            <a href="e-book-c.html" class="inline-flex items-center space-x-3 text-xs uppercase tracking-[0.25em] text-neutral-300 [.light_&]:text-neutral-700 border border-neutral-700 [.light_&]:border-neutral-300 px-8 py-4 rounded-full hover:border-white hover:text-white [.light_&]:hover:border-neutral-900 [.light_&]:hover:text-black transition-all duration-300">
+              <span data-i18n="btn-read-online">Read E-Book</span>
+              <i data-lucide="book-open" class="w-4 h-4"></i>
+            </a>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <div class="book-split-divider" role="separator" aria-hidden="true"></div>
+
+    <!-- BOOK 4: VOL. 04 — GOLDEN AFTERGLOW (1620 x 1080 -> 3:2) -->
+    <section id="vol-04" class="book-band book-band--secondary scroll-mt-14 md:scroll-mt-20">
+      <article class="book-entry wp-block-columns alignwide is-layout-flex wp-container-core-columns-is-layout-6447b870 wp-block-columns-is-layout-flex is-reverse">
+        <div class="wp-block-column book-cover-stage">
+          <div class="book-frame group relative w-full max-w-[500px] aspect-[3/2] rounded-md overflow-hidden bg-neutral-900 border border-neutral-800/80 [.light_&]:border-neutral-200 block">
+            <img src="https://noreg714.github.io/my-photo-album/images/photobooks/maxma-photobook-04a.webp"
+                 alt="GOLDEN AFTERGLOW"
+                 class="w-full h-full object-cover brightness-90 contrast-115 transition-transform duration-700 ease-out group-hover:scale-105">
+          </div>
+        </div>
+
+        <div class="wp-block-column flex flex-col justify-center">
+          <span class="text-xs uppercase tracking-[0.3em] text-neutral-500 mb-3">
+            VOL. 04
+          </span>
+          <h2 class="font-serif-title text-3xl sm:text-5xl font-light text-white [.light_&]:text-neutral-900 mb-5" data-i18n="b4-title">
+            GOLDEN AFTERGLOW
+          </h2>
+          <p class="max-w-[33rem] text-xs sm:text-sm text-neutral-400 [.light_&]:text-neutral-600 leading-relaxed font-light mb-5" data-i18n="b4-desc">
+            Golden Afterglow lingers on the quiet radiance after sunset, following warm light across sky, ridge, and water as day dissolves softly into dusk.
+          </p>
+          <div class="book-focus-divider" aria-hidden="true"></div>
+          <div class="text-[10px] tracking-[0.14em] text-neutral-600 [.light_&]:text-neutral-400 font-light mb-8">
+            <span class="block uppercase tracking-[0.2em] mb-1" data-i18n="label-focus">Focus</span>
+            <span class="block" data-i18n="b4-focus">Post-Sunset Light &amp; Dusk Transitions</span>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-3.5">
+            <a href="e-book-d.html" class="inline-flex items-center space-x-3 text-xs uppercase tracking-[0.25em] text-neutral-300 [.light_&]:text-neutral-700 border border-neutral-700 [.light_&]:border-neutral-300 px-8 py-4 rounded-full hover:border-white hover:text-white [.light_&]:hover:border-neutral-900 [.light_&]:hover:text-black transition-all duration-300">
+              <span data-i18n="btn-read-online">Read E-Book</span>
+              <i data-lucide="book-open" class="w-4 h-4"></i>
+            </a>
+          </div>
+        </div>
+      </article>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer id="contact" class="relative z-30 bg-black [.light_&]:bg-[#eaeaea] py-12 px-6 md:px-12 border-t border-neutral-900 [.light_&]:border-neutral-300 flex flex-col md:flex-row justify-between items-center text-neutral-500 text-xs transition-colors duration-300">
+    <div class="mb-4 md:mb-0 tracking-wider text-center md:text-left" data-i18n="footer-rights">
+      © 2026 MAX MA PHOTO COLLECTION. ALL RIGHTS RESERVED.
+    </div>
+    <div class="flex space-x-6 uppercase tracking-widest text-[10px]">
+      <a href="https://www.linkedin.com" target="_blank" rel="noopener noreferrer" class="hover:text-white [.light_&]:hover:text-black transition-colors" data-i18n="footer-linkedin">LINKEDIN</a>
+    </div>
+  </footer>
+
+  <!-- GSAP & ScrollTrigger -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+  <script>
+    lucide.createIcons();
+
+    const siteHeader = document.getElementById('site-header');
+    function updateHeaderScrollState() {
+      if (window.scrollY > 5) {
+        siteHeader.classList.add('glass-nav');
+      } else {
+        siteHeader.classList.remove('glass-nav');
+      }
+    }
+    window.addEventListener('scroll', updateHeaderScrollState);
+
+    // Highlight active book (01 - 04) on right side rail
+    const bookBands = Array.from(document.querySelectorAll('.book-band'));
+    const railLinks = Array.from(document.querySelectorAll('.side-book-link'));
+
+    function updateActiveBookRail() {
+      if (!bookBands.length || !railLinks.length) return;
+      const triggerY = window.innerHeight * 0.42;
+      let activeId = bookBands[0].id;
+
+      bookBands.forEach((band) => {
+        const rect = band.getBoundingClientRect();
+        if (rect.top <= triggerY) {
+          activeId = band.id;
+        }
+      });
+
+      railLinks.forEach((link) => {
+        const isMatch = link.getAttribute('data-book-target') === activeId;
+        link.classList.toggle('is-active', isMatch);
+      });
+    }
+
+    window.addEventListener('scroll', updateActiveBookRail, { passive: true });
+    window.addEventListener('resize', updateActiveBookRail);
+
+    function toggleTheme() {
+      const htmlElement = document.documentElement;
+      const sunIcon = document.getElementById('sun-icon');
+      const moonIcon = document.getElementById('moon-icon');
+      const mobThemeDark = document.getElementById('mob-theme-dark');
+      const mobThemeLight = document.getElementById('mob-theme-light');
+
+      htmlElement.classList.toggle('light');
+      const isLight = htmlElement.classList.contains('light');
+
+      if (sunIcon && moonIcon) {
+        sunIcon.classList.toggle('hidden', !isLight);
+        sunIcon.classList.toggle('block', isLight);
+        moonIcon.classList.toggle('hidden', isLight);
+        moonIcon.classList.toggle('block', !isLight);
+      }
+
+      if (mobThemeDark && mobThemeLight) {
+        mobThemeDark.classList.toggle('hidden', isLight);
+        mobThemeLight.classList.toggle('hidden', !isLight);
+      }
+
+      updateHeaderScrollState();
+      lucide.createIcons();
+    }
+
+    function toggleMobileMenu() {
+      const mobileMenu = document.getElementById('mobile-menu');
+      const menuIcon = document.getElementById('menu-icon');
+      const closeIcon = document.getElementById('close-icon');
+      const isOpen = mobileMenu.classList.contains('opacity-100');
+
+      mobileMenu.classList.toggle('opacity-100', !isOpen);
+      mobileMenu.classList.toggle('pointer-events-auto', !isOpen);
+      mobileMenu.classList.toggle('opacity-0', isOpen);
+      mobileMenu.classList.toggle('pointer-events-none', isOpen);
+
+      menuIcon.classList.toggle('hidden', !isOpen);
+      menuIcon.classList.toggle('block', isOpen);
+      closeIcon.classList.toggle('block', !isOpen);
+      closeIcon.classList.toggle('hidden', isOpen);
+
+      document.body.style.overflow = isOpen ? '' : 'hidden';
+      lucide.createIcons();
+    }
+
+    const translations = {
+      en: {
+        "nav-home": "Home",
+        "nav-gallery": "Gallery",
+        "nav-perspectives": "Photobooks",
+        "nav-exhibition": "Virtual Space",
+        "rail-01": "The Anthology",
+        "rail-02": "Primitive Real",
+        "rail-03": "Corridors of Antiquity",
+        "rail-04": "Golden Afterglow",
+        "label-focus": "Focus",
+        "btn-read-online": "Read E-Book",
+        "b1-title": "THE ANTHOLOGY",
+        "b1-desc": "The Anthology gathers defining photographs and reflections across two decades, bringing together foundational moments where light, distance, and quiet observation form a lasting visual archive.",
+        "b1-focus": "Crafted Through Years of Light & Stillness",
+        "b2-title": "PRIMITIVE REAL",
+        "b2-desc": "Primitive Real turns toward raw, untamed landscapes and elemental terrain, capturing the unvarnished presence of stone, mist, and open wilderness before human intervention.",
+        "b2-focus": "Elemental Terrain & Untamed Wilderness",
+        "b3-title": "CORRIDORS OF ANTIQUITY",
+        "b3-desc": "Corridors of Antiquity explores aged passages, weathered stonework, and enduring cultural sanctuaries where history lingers quietly through shadow, proportion, and time.",
+        "b3-focus": "Historic Passages & Quiet Sanctuaries",
+        "b4-title": "GOLDEN AFTERGLOW",
+        "b4-desc": "Golden Afterglow lingers on the quiet radiance after sunset, following warm light across sky, ridge, and water as day dissolves softly into dusk.",
+        "b4-focus": "Post-Sunset Light & Dusk Transitions",
+        "footer-rights": "© 2026 MAX MA PHOTO COLLECTION. ALL RIGHTS RESERVED.",
+        "footer-linkedin": "LINKEDIN"
+      },
+      tc: {
+        "nav-home": "首頁",
+        "nav-gallery": "光影藝廊",
+        "nav-perspectives": "畫冊集",
+        "nav-exhibition": "線上展廳",
+        "rail-01": "精選總集",
+        "rail-02": "原始真實",
+        "rail-03": "古韻迴廊",
+        "rail-04": "金色餘暉",
+        "label-focus": "焦點",
+        "btn-read-online": "在線閱讀電子書",
+        "b1-title": "精選總集",
+        "b1-desc": "精選總集匯聚跨越二十年的代表影像與思索，將光線、距離與沉靜凝視化作具份量的視覺典藏。",
+        "b1-focus": "歷經歲月光影與靜心打磨之作",
+        "b2-title": "原始真實",
+        "b2-desc": "原始真實走入未經雕琢的自然地貌，凝視岩石、山霧與荒野在純粹狀態下的真實氣息與力量。",
+        "b2-focus": "自然地貌與未經雕琢荒野",
+        "b3-title": "古韻迴廊",
+        "b3-desc": "古韻迴廊探尋古老通道、斑駁石砌與沉澱歲月的空間，在光影與比例中感受歷史的靜默延續。",
+        "b3-focus": "歲月通道與沉靜人文空間",
+        "b4-title": "金色餘暉",
+        "b4-desc": "金色餘暉留住日落後的溫潤光影，追隨餘暉掠過天際、山脊與水面，見證白晝悄然步入暮色。",
+        "b4-focus": "日落餘暉與暮色光影流轉",
+        "footer-rights": "© 2026 MAX MA PHOTO COLLECTION. ALL RIGHTS RESERVED.",
+        "footer-linkedin": "LINKEDIN"
+      }
+    };
+
+    function setLanguage(lang) {
+      document.documentElement.lang = lang === 'en' ? 'en' : (lang === 'tc' ? 'zh-HK' : 'zh-CN');
+
+      const btnEn = document.getElementById('lang-en');
+      const btnTc = document.getElementById('lang-tc');
+      const btnSc = document.getElementById('lang-sc');
+      const mobBtnEn = document.getElementById('mob-lang-en');
+      const mobBtnTc = document.getElementById('mob-lang-tc');
+      const mobBtnSc = document.getElementById('mob-lang-sc');
+
+      [btnEn, btnTc, btnSc, mobBtnEn, mobBtnTc, mobBtnSc].forEach(b => {
+        if (b) b.className = "hover:text-white transition-colors";
+      });
+
+      if (lang === 'en') {
+        if (btnEn) btnEn.className = "lang-active text-white font-medium transition-colors";
+        if (mobBtnEn) mobBtnEn.className = "text-white [.light_&]:text-black font-medium transition-colors";
+        applyTranslations(translations.en);
+      } else if (lang === 'tc') {
+        if (btnTc) btnTc.className = "lang-active text-white font-medium transition-colors";
+        if (mobBtnTc) mobBtnTc.className = "text-white [.light_&]:text-black font-medium transition-colors";
+        applyTranslations(translations.tc);
+      } else if (lang === 'sc') {
+        if (btnSc) btnSc.className = "lang-active text-white font-medium transition-colors";
+        if (mobBtnSc) mobBtnSc.className = "text-white [.light_&]:text-black font-medium transition-colors";
+        const converter = OpenCC.Converter({ from: 'hk', to: 'cn' });
+        const scDict = {};
+        for (let key in translations.tc) {
+          scDict[key] = converter(translations.tc[key]);
+        }
+        applyTranslations(scDict);
+      }
+    }
+
+    function applyTranslations(dict) {
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (dict[key]) {
+          el.innerHTML = dict[key];
+        }
+      });
+    }
+
+    gsap.registerPlugin(ScrollTrigger);
+    window.addEventListener('load', () => {
+      updateHeaderScrollState();
+      updateActiveBookRail();
+      setLanguage('en');
+
+      gsap.fromTo(
+        '#side-book-index',
+        { opacity: 0, x: 42, yPercent: -50 },
+        {
+          opacity: 1,
+          x: 0,
+          yPercent: -50,
+          duration: 1.75,
+          delay: 0.15,
+          ease: 'power2.out'
+        }
+      );
+
+      gsap.utils.toArray('.book-entry').forEach((entry) => {
+        gsap.from(entry, {
+          y: 45,
+          opacity: 0,
+          duration: 1,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: entry,
+            start: 'top 84%',
+            toggleActions: 'play none none reverse'
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>
