@@ -1,0 +1,2226 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Max Ma Collection — Editorial Photography Showcase</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              bg: '#0d0d0d',
+              surface: '#141414',
+              card: '#111111',
+              border: '#222222',
+              muted: '#888888',
+              gold: '#D4AF37'
+            }
+          },
+          fontFamily: {
+            serif: ['Cormorant Garamond', 'Georgia', 'serif'],
+            sans: ['Montserrat', 'Helvetica', 'Arial', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts: Cormorant Garamond & Montserrat -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Montserrat:ital,wght@0,200;0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- OpenCC-js for Traditional/Simplified Chinese Conversion -->
+  <script src="https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/full.js"></script>
+
+  <!-- Alpine.js -->
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+  <style>
+    body {
+      background-color: #0d0d0d;
+      color: #e6e6e6;
+      font-family: 'Montserrat', sans-serif;
+      overflow-x: hidden;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* Light Mode Overrides */
+    .light body {
+      background-color: #f7f7f7;
+      color: #1a1a1a;
+    }
+
+    .font-serif-title {
+      font-family: 'Cormorant Garamond', serif;
+    }
+
+    /* Top Loading Progress Bar */
+    #top-progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 2px;
+      width: 0%;
+      z-index: 60;
+      background: linear-gradient(90deg, #888888, #D4AF37, #ffffff);
+      transition: width 0.28s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.45s ease;
+      pointer-events: none;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0d0d0d;
+    }
+    .light ::-webkit-scrollbar-track {
+      background: #f7f7f7;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #333333;
+      border-radius: 3px;
+    }
+    .light ::-webkit-scrollbar-thumb {
+      background: #cccccc;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #555555;
+    }
+    .light ::-webkit-scrollbar-thumb:hover {
+      background: #999999;
+    }
+
+    /* Glassmorphism Header */
+    .glass-nav {
+      background: rgba(13, 13, 13, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      transition: background 0.3s ease, border-color 0.3s ease;
+    }
+    .light .glass-nav {
+      background: rgba(247, 247, 247, 0.85);
+    }
+
+    /* Minimal Hide Scrollbar */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* 真實瀑布流專用樣式（固定橫向分欄，避免非同步載入高度變化時重新洗牌換位） */
+    .true-masonry {
+      display: flex;
+      align-items: flex-start;
+      gap: 1.5rem;
+    }
+    .masonry-col {
+      flex: 1 1 0%;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 圖片載入完成的平滑淡入動畫 */
+    .fade-in {
+      animation: fadeIn 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px) scale(0.99); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* 載入中骨架屏閃爍特效 */
+    @keyframes pulse-slow {
+      0%, 100% { opacity: 0.35; }
+      50% { opacity: 0.75; }
+    }
+    .skeleton-loader {
+      animation: pulse-slow 1.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    [x-cloak] { display: none !important; }
+  </style>
+</head>
+<body class="selection:bg-white selection:text-black min-h-screen flex flex-col justify-between"
+      x-data="galleryApp()" 
+      x-init="initApp()"
+      @keydown.escape.window="closeLightbox()"
+      @keydown.left.window="if(lightboxOpen) prevPhoto()"
+      @keydown.right.window="if(lightboxOpen) nextPhoto()">
+
+  <!-- Top Smooth Loading Bar -->
+  <div id="top-progress-bar" :style="`width: ${loadProgress}%; opacity: ${galleryReady ? 0 : 1};`"></div>
+
+  <!-- Fixed Header Navigation -->
+  <header class="fixed top-0 left-0 w-full z-50 glass-nav border-b border-neutral-900 [.light_&]:border-neutral-200 flex justify-between items-center px-6 md:px-12 py-6 transition-all duration-300">
+    <div class="flex items-center space-x-3 w-1/2 md:w-1/4">
+      <span class="text-xs uppercase tracking-[0.3em] font-medium text-white [.light_&]:text-neutral-900">MaxMa Collection</span>
+      <span class="text-[10px] text-neutral-400 [.light_&]:text-neutral-500 border border-neutral-700 [.light_&]:border-neutral-300 px-2 py-0.5 rounded-full hidden sm:inline-block">EDITION 2026</span>
+    </div>
+
+    <!-- Header Navigation Center (Desktop) -->
+    <nav class="hidden md:flex justify-center space-x-8 text-xs tracking-[0.2em] uppercase text-neutral-300 [.light_&]:text-neutral-700 w-2/4 text-center">
+      <a href="index.html" class="hover:text-white [.light_&]:hover:text-black transition-colors" data-i18n="nav-home">Home</a>
+      <a href="gallery.html" class="text-white [.light_&]:text-black font-medium transition-colors" data-i18n="nav-gallery">Gallery</a>
+      <a href="photobooks.html" class="hover:text-white [.light_&]:hover:text-black transition-colors" data-i18n="nav-perspectives">Photobooks</a>
+      <a href="exhibition.html" class="hover:text-white [.light_&]:hover:text-black transition-colors" data-i18n="nav-exhibition">Virtual Space</a>
+    </nav>
+
+    <!-- Right Side Controls: Desktop Language & Theme Controls / Mobile Hamburger Button -->
+    <div class="flex justify-end items-center space-x-4 w-1/2 md:w-1/4">
+      <!-- Desktop EN | 繁 | 簡 Language Switcher -->
+      <div class="hidden md:flex items-center space-x-2 text-[10px] uppercase tracking-[0.15em] text-neutral-300 [.light_&]:text-neutral-700">
+        <button id="lang-en" type="button" onclick="setLanguage('en')" class="text-white [.light_&]:text-black font-medium transition-colors">EN</button>
+        <span class="text-neutral-600">/</span>
+        <button id="lang-tc" type="button" onclick="setLanguage('tc')" class="hover:text-white [.light_&]:hover:text-black transition-colors">繁</button>
+        <span class="text-neutral-600">/</span>
+        <button id="lang-sc" type="button" onclick="setLanguage('sc')" class="hover:text-white [.light_&]:hover:text-black transition-colors">简</button>
+      </div>
+
+      <!-- Desktop Black/White Mode Toggle Button -->
+      <button id="theme-toggle" type="button" onclick="toggleTheme()" class="hidden md:flex items-center justify-center w-8 h-8 rounded-full border border-neutral-700 [.light_&]:border-neutral-300 hover:border-white [.light_&]:hover:border-black text-neutral-300 [.light_&]:text-neutral-700 hover:text-white [.light_&]:hover:text-black transition-all duration-300" aria-label="Toggle Theme">
+        <i data-lucide="sun" id="sun-icon" class="w-3.5 h-3.5 hidden"></i>
+        <i data-lucide="moon" id="moon-icon" class="w-3.5 h-3.5 block"></i>
+      </button>
+
+      <!-- Mobile Hamburger Button (< 768px) -->
+      <button id="mobile-menu-btn" type="button" onclick="toggleMobileMenu()" class="md:hidden flex items-center justify-center w-8 h-8 text-neutral-300 [.light_&]:text-neutral-700 hover:text-white [.light_&]:hover:text-black transition-colors" aria-label="Open Menu">
+        <i data-lucide="menu" id="menu-icon" class="w-5 h-5 block"></i>
+        <i data-lucide="x" id="close-icon" class="w-5 h-5 hidden"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Mobile Menu Overlay (< 768px) -->
+  <div id="mobile-menu" class="fixed inset-0 bg-[#0d0d0d] [.light_&]:bg-[#f7f7f7] z-40 flex flex-col justify-center items-center space-y-8 text-sm uppercase tracking-[0.3em] text-neutral-300 [.light_&]:text-neutral-700 opacity-0 pointer-events-none transition-all duration-300 md:hidden">
+    <a href="index.html" onclick="toggleMobileMenu()" class="hover:text-white [.light_&]:hover:text-black transition-colors" data-i18n="nav-home">Home</a>
+    <a href="gallery.html" onclick="toggleMobileMenu()" class="text-white [.light_&]:text-black font-medium transition-colors" data-i18n="nav-gallery">Gallery</a>
+    <a href="photobooks.html" onclick="toggleMobileMenu()" class="hover:text-white [.light_&]:hover:text-black transition-colors" data-i18n="nav-perspectives">Photobooks</a>
+    <a href="exhibition.html" onclick="toggleMobileMenu()" class="hover:text-white [.light_&]:hover:text-black transition-colors" data-i18n="nav-exhibition">Virtual Space</a>
+
+    <div class="w-12 h-[1px] bg-neutral-800 [.light_&]:bg-neutral-300 my-2"></div>
+
+    <!-- 行動版語系切換 (EN / 繁 / 簡) -->
+    <div class="flex items-center space-x-3 text-xs tracking-[0.2em]">
+      <button id="mob-lang-en" type="button" onclick="setLanguage('en'); toggleMobileMenu();" class="text-white [.light_&]:text-black font-medium transition-colors">EN</button>
+      <span class="text-neutral-600">/</span>
+      <button id="mob-lang-tc" type="button" onclick="setLanguage('tc'); toggleMobileMenu();" class="hover:text-white [.light_&]:hover:text-black transition-colors">繁</button>
+      <span class="text-neutral-600">/</span>
+      <button id="mob-lang-sc" type="button" onclick="setLanguage('sc'); toggleMobileMenu();" class="hover:text-white [.light_&]:hover:text-black transition-colors">简</button>
+    </div>
+
+    <!-- 行動版黑白主題切換按鈕 -->
+    <button type="button" onclick="toggleTheme();" class="flex items-center space-x-2 text-xs tracking-[0.2em] text-neutral-400 hover:text-white [.light_&]:hover:text-black transition-colors pt-2">
+      <span id="mob-theme-dark" class="flex items-center space-x-2">
+        <i data-lucide="moon" class="w-4 h-4"></i>
+        <span class="text-[10px] uppercase" data-i18n="theme-dark">DARK MODE</span>
+      </span>
+      <span id="mob-theme-light" class="flex items-center space-x-2 hidden">
+        <i data-lucide="sun" class="w-4 h-4"></i>
+        <span class="text-[10px] uppercase" data-i18n="theme-light">LIGHT MODE</span>
+      </span>
+    </button>
+  </div>
+
+  <!-- Dynamic Photo Gallery Section -->
+  <main id="gallery" class="relative z-30 max-w-[1700px] mx-auto px-6 md:px-12 pt-32 pb-20 w-full flex-grow transition-opacity duration-500"
+        :class="galleryReady ? 'opacity-100' : 'opacity-70'">
+    
+    <!-- True Masonry Flow Grid (Stable Column Distribution) -->
+    <div class="true-masonry mb-12">
+      <template x-for="(colPhotos, colIdx) in masonryColumns" :key="activeCategory + '-' + effectiveCols + '-' + colIdx">
+        <div class="masonry-col">
+          <template x-for="photo in colPhotos" :key="photo.id">
+            <div @click="openLightbox(photo)"
+                 class="card-item group relative cursor-pointer mb-6"
+                 x-data="{ loaded: false }">
+              
+              <!-- Image Container (min-h only while loading so landscape photos have no empty bottom gap) -->
+              <div class="overflow-hidden rounded-lg bg-neutral-900/80 [.light_&]:bg-neutral-200 relative shadow-md"
+                   :class="loaded ? '' : 'min-h-[250px]'">
+                
+                <!-- Loading Skeleton Placeholder -->
+                <div x-show="!loaded" class="absolute inset-0 flex flex-col items-center justify-center bg-neutral-900/90 [.light_&]:bg-neutral-200 skeleton-loader z-10">
+                  <div class="w-6 h-6 border-2 border-neutral-700 border-t-white rounded-full animate-spin mb-2"></div>
+                  <span class="text-[9px] uppercase tracking-[0.2em] text-neutral-500" data-i18n="loading-text">LOADING...</span>
+                </div>
+
+                <!-- Actual Image with Lazy Loading, Decode & Smooth Fade-in -->
+                <img :src="photo.url" 
+                     :alt="getPhotoTitle(photo, currentLang)" 
+                     loading="lazy"
+                     decoding="async"
+                     x-init="if ($el.complete) { $el.decode().catch(() => {}).finally(() => { loaded = true; }); }"
+                     @load="const img = $el; if (img.decode) { img.decode().catch(() => {}).finally(() => { loaded = true; }); } else { loaded = true; }"
+                     class="w-full h-auto block object-cover brightness-90 contrast-115 transition-all duration-700 ease-out group-hover:brightness-105 group-hover:scale-105"
+                     :class="loaded ? 'fade-in' : 'opacity-0'">
+                
+                <!-- Hover Expand Button Badge (Top Right) -->
+                <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
+                  <div class="w-8 h-8 rounded-full bg-black/60 backdrop-blur-md border border-white/25 flex items-center justify-center text-white">
+                    <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
+                  </div>
+                </div>
+
+                <!-- Bottom Left Info Stack (Category & Location) -->
+                <div class="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-start gap-1.5 z-20">
+                  <span class="text-[9px] uppercase tracking-[0.25em] bg-black/70 backdrop-blur-md border border-white/10 text-neutral-300 px-3 py-1 rounded-full"
+                        x-text="photo.vol[currentLang] || photo.vol.en"></span>
+                  <span class="text-[9px] uppercase tracking-[0.2em] bg-black/70 backdrop-blur-md border border-white/10 text-neutral-300 px-3 py-1 rounded-full flex items-center gap-1.5">
+                    <i data-lucide="map-pin" class="w-3 h-3 text-brand-gold"></i>
+                    <span x-text="getPhotoLocation(photo, currentLang)"></span>
+                  </span>
+                </div>
+              </div>
+
+            </div>
+          </template>
+        </div>
+      </template>
+    </div>
+
+    <!-- Empty State -->
+    <div x-show="filteredPhotos.length === 0" class="py-24 text-center text-neutral-500 text-xs uppercase tracking-[0.3em]" data-i18n="empty-gallery">
+      NO PHOTOGRAPHS FOUND IN THIS CATEGORY.
+    </div>
+
+  </main>
+
+  <!-- COMBINED FLOATING CONTROL BAR -->
+  <div class="fixed bottom-6 md:bottom-3 left-0 w-full z-40 flex justify-center px-3 sm:px-4 pointer-events-none"
+       style="padding-bottom: env(safe-area-inset-bottom, 0px);">
+    <div class="pointer-events-auto inline-flex items-center gap-2 md:gap-3 bg-neutral-900/90 [.light_&]:bg-white/90 backdrop-blur-xl border border-neutral-800 [.light_&]:border-neutral-200 p-2 md:p-2 rounded-full shadow-2xl overflow-x-auto max-w-full no-scrollbar">
+      
+      <!-- Part A: Category Filter Buttons -->
+      <div class="flex items-center space-x-1.5 md:space-x-1 shrink-0">
+        <template x-for="category in categories" :key="category.id">
+          <button type="button"
+                  @click="activeCategory = category.id"
+                  :class="activeCategory === category.id 
+                    ? 'bg-white [.light_&]:bg-neutral-900 text-black [.light_&]:text-white font-medium shadow-sm' 
+                    : 'text-neutral-400 [.light_&]:text-neutral-600 hover:text-white [.light_&]:hover:text-black'"
+                  class="px-3.5 py-2 md:px-3 md:py-1 text-[11px] md:text-[10px] uppercase tracking-[0.15em] rounded-full transition-all duration-300 whitespace-nowrap">
+            <span x-text="category.label[currentLang] || category.label.en"></span>
+          </button>
+        </template>
+      </div>
+
+      <!-- Part B: Grid Layout Switcher -->
+      <div class="hidden md:flex items-center">
+        <div class="w-[1px] h-5 bg-neutral-800 [.light_&]:bg-neutral-250 shrink-0 mx-2"></div>
+
+        <div class="flex items-center space-x-2 shrink-0 px-1">
+          <button type="button"
+                  @click="gridCols = 2" 
+                  :class="gridCols === 2 ? 'text-white [.light_&]:text-black' : 'text-neutral-500 hover:text-neutral-300 [.light_&]:hover:text-neutral-700'"
+                  title="2 Columns Grid"
+                  class="p-1 transition-colors">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="4" y="3" width="7" height="18" rx="1"/>
+              <rect x="13" y="3" width="7" height="18" rx="1"/>
+            </svg>
+          </button>
+
+          <button type="button"
+                  @click="gridCols = 3" 
+                  :class="gridCols === 3 ? 'text-white [.light_&]:text-black' : 'text-neutral-500 hover:text-neutral-300 [.light_&]:hover:text-neutral-700'"
+                  title="3 Columns Grid"
+                  class="p-1 transition-colors">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="3" y="3" width="8" height="8" rx="1"/>
+              <rect x="13" y="3" width="8" height="8" rx="1"/>
+              <rect x="3" y="13" width="8" height="8" rx="1"/>
+              <rect x="13" y="13" width="8" height="8" rx="1"/>
+            </svg>
+          </button>
+
+          <button type="button"
+                  @click="gridCols = 4" 
+                  :class="gridCols === 4 ? 'text-white [.light_&]:text-black' : 'text-neutral-500 hover:text-neutral-300 [.light_&]:hover:text-neutral-700'"
+                  title="4 Columns Grid"
+                  class="p-1 transition-colors">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="3" y="3" width="5" height="5" rx="0.5"/>
+              <rect x="9.5" y="3" width="5" height="5" rx="0.5"/>
+              <rect x="16" y="3" width="5" height="5" rx="0.5"/>
+              <rect x="3" y="9.5" width="5" height="5" rx="0.5"/>
+              <rect x="9.5" y="9.5" width="5" height="5" rx="0.5"/>
+              <rect x="16" y="9.5" width="5" height="5" rx="0.5"/>
+              <rect x="3" y="16" width="5" height="5" rx="0.5"/>
+              <rect x="9.5" y="16" width="5" height="5" rx="0.5"/>
+              <rect x="16" y="16" width="5" height="5" rx="0.5"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Luxury Dark Editorial Lightbox Modal -->
+  <div x-show="lightboxOpen" 
+       x-transition:enter="transition ease-out duration-300"
+       x-transition:enter-start="opacity-0"
+       x-transition:enter-end="opacity-100"
+       x-transition:leave="transition ease-in duration-200"
+       x-transition:leave-start="opacity-100"
+       x-transition:leave-end="opacity-0"
+       class="fixed inset-0 z-50 bg-[#070707]/95 flex flex-col justify-between p-4 sm:p-6 md:p-10 backdrop-blur-2xl overflow-y-auto"
+       x-cloak>
+    
+    <!-- Lightbox Header -->
+    <div class="flex items-center justify-between w-full max-w-[1700px] mx-auto z-20 pb-4 border-b border-neutral-900 shrink-0">
+      <div class="flex items-center space-x-4 text-xs tracking-[0.25em] text-neutral-500 uppercase">
+        <span class="text-white font-medium" x-text="currentPhotoIndex + 1"></span>
+        <span>/</span>
+        <span x-text="filteredPhotos.length"></span>
+        <span class="hidden sm:inline-block border-l border-neutral-800 pl-4 font-serif-title text-base text-white" x-text="getPhotoTitle(currentPhoto, currentLang)"></span>
+      </div>
+
+      <button type="button" @click="closeLightbox()" class="p-2.5 rounded-full bg-brand-surface border border-neutral-800 text-neutral-400 hover:text-white hover:border-neutral-600 transition-all">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+
+    <!-- Lightbox Body -->
+    <div class="flex-grow flex flex-col lg:flex-row items-center justify-center w-full max-w-[1700px] mx-auto my-auto gap-6 relative py-4">
+      
+      <!-- Image Stage with Fixed-Height Navigation Anchors -->
+      <div class="relative flex-grow w-full h-[50vh] lg:h-[78vh] flex items-center justify-center px-10 sm:px-14">
+        <!-- Prev Navigation Button (Locked Vertically at 50% of Image Stage) -->
+        <button type="button" @click.stop="prevPhoto()" class="absolute left-0 sm:left-2 top-1/2 -translate-y-1/2 z-30 p-2.5 sm:p-3 rounded-full bg-black/80 text-neutral-200 hover:text-white hover:bg-black border border-neutral-800 transition-colors shadow-lg">
+          <i data-lucide="chevron-left" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+        </button>
+
+        <!-- Center Image View -->
+        <template x-if="currentPhoto">
+          <img :src="currentPhoto.url" 
+               :alt="currentPhoto.title"
+               class="max-h-full w-auto max-w-full object-contain rounded-lg shadow-2xl border border-neutral-800/50">
+        </template>
+
+        <!-- Next Navigation Button (Locked Vertically at 50% of Image Stage) -->
+        <button type="button" @click.stop="nextPhoto()" class="absolute right-0 sm:right-2 top-1/2 -translate-y-1/2 z-30 p-2.5 sm:p-3 rounded-full bg-black/80 text-neutral-200 hover:text-white hover:bg-black border border-neutral-800 transition-colors shadow-lg">
+          <i data-lucide="chevron-right" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+        </button>
+      </div>
+
+      <!-- Location & Info Sidebar -->
+      <template x-if="currentPhoto">
+        <div class="w-full lg:w-80 bg-brand-surface/90 border border-neutral-800 rounded-xl p-5 text-xs space-y-5 shrink-0 backdrop-blur-lg max-h-[40vh] lg:max-h-[78vh] overflow-y-auto">
+          <div class="border-b border-neutral-800 pb-4">
+            <span class="text-[10px] uppercase tracking-[0.25em] text-neutral-400 block mb-1" x-text="currentPhoto.vol[currentLang] || currentPhoto.vol.en"></span>
+            <h2 class="font-serif-title text-2xl text-white font-normal" x-text="getPhotoTitle(currentPhoto, currentLang)"></h2>
+            <p class="text-neutral-400 text-[11px] mt-2 font-light leading-relaxed" x-text="getPhotoDescription(currentPhoto, currentLang)"></p>
+          </div>
+
+          <div class="space-y-3 pt-1">
+            <div class="text-[9px] uppercase tracking-[0.25em] text-neutral-500 font-normal" data-i18n="location-coords-label">LOCATION & COORDINATES</div>
+            <div>
+              <span class="text-white font-medium block text-sm tracking-[0.12em] mb-2.5" x-text="getPhotoLocation(currentPhoto, currentLang)"></span>
+              <a :href="'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(currentPhoto.location + ' ' + currentPhoto.coords)" 
+                 target="_blank"
+                 class="inline-flex items-center gap-1.5 text-brand-gold hover:underline text-xs font-mono tracking-wider bg-neutral-900/80 border border-neutral-800 px-3 py-2 rounded-lg w-full justify-between transition-colors hover:border-brand-gold/50">
+                <span class="flex items-center gap-1.5">
+                  <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
+                  <span x-text="currentPhoto.coords"></span>
+                </span>
+                <i data-lucide="external-link" class="w-3.5 h-3.5 text-neutral-500"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <!-- Lightbox Footer Instruction -->
+    <div class="w-full text-center pt-2 border-t border-neutral-900 text-[10px] uppercase tracking-[0.3em] text-neutral-500 shrink-0" data-i18n="lightbox-hint">
+      USE ARROW KEYS OR BUTTONS TO NAVIGATE • ESC TO CLOSE
+    </div>
+  </div>
+
+  <!-- Editorial Footer (Pinned to page bottom) -->
+  <footer id="contact" class="relative z-30 mt-auto bg-black [.light_&]:bg-[#eaeaea] pt-10 pb-16 px-6 md:px-12 border-t border-neutral-900 [.light_&]:border-neutral-300 flex flex-col md:flex-row justify-between items-center text-neutral-500 text-xs transition-colors duration-300">
+    <div class="mb-4 md:mb-0 tracking-wider text-center md:text-left" data-i18n="footer-rights">
+      © 2026 MAX MA PHOTO COLLECTION. ALL RIGHTS RESERVED.
+    </div>
+    <div class="flex space-x-6 uppercase tracking-widest text-[10px]">
+      <a href="javascript:void(0);" class="hover:text-white [.light_&]:hover:text-black transition-colors">linkedin</a>
+    </div>
+  </footer>
+
+  <!-- App Data & Logic -->
+  <script>
+    // Global current language state ('en' | 'tc' | 'sc')
+    let currentLang = 'en';
+
+
+    // Multilingual conversion helper (en / tc / sc)
+    function convertTextLang(text, lang) {
+      if (!text) return '';
+      if (lang === 'en') return text;
+      if (lang === 'tc') return text;
+      if (lang === 'sc') {
+        try {
+          const converter = OpenCC.Converter({ from: 'hk', to: 'cn' });
+          return converter(text);
+        } catch (e) {
+          return text;
+        }
+      }
+      return text;
+    }
+
+    const photoTitleTcMap = {'Moonlit Glacier Ridge': '月色冰川山脊', 'Solitary Gentoo on Ice': '冰原上的孤獨巴布亞企鵝', 'Curtain of White Water': '白水簾幕', 'Emerald Horseshoe Plunge': '翡翠馬蹄飛瀑', 'Penguin Colony by the Icebergs': '冰山旁的企鵝群', 'Blue Ice Horizon': '湛藍冰川地平線', 'Autumn Terraces of Turquoise': '秋色碧水鈣華階地', 'Sylvan Torrent in Gold': '金秋林間急流', 'Mirror of the Salt Flats': '鹽沼鏡面倒影', 'Veil Over the Basalt Cliff': '玄武岩峭壁水紗', 'Emerald Meadow Falls': '翠綠草坡飛瀑', 'Glacial Valley Panorama': '冰川谷地全景', 'Drift Ice Passage': '浮冰水道', 'Caravan in the Rose Desert': '玫瑰沙漠行旅隊伍', 'Sanctuary Through the Siq': '穿過峽谷的聖殿', 'Column of the Ancient Empire': '古帝國石柱', 'Bronze Rider in the Mist': '薄霧中的青銅騎士', 'Portal to Huayna Picchu': '通往瓦伊納比丘的石門', 'Five Blessings': '五福臨門', 'Dune Journey at High Noon': '正午沙丘行旅', 'Spring Blossoms by the Pond': '池畔春櫻', 'Colonnade of Light': '光影石柱迴廊', 'Threshold of the Cloud Citadel': '雲端古城門檻', 'Quiet Morning in Plaza Mayor': '主廣場的靜謐清晨', 'Hillside Monastery in Blue Sky': '藍天下的山坡寺廟', 'Pavilion in the Green Courtyard': '綠茵庭院涼亭', 'Cliffside Town Above the Surf': '浪花之上的懸崖小鎮', 'Harbor Promenade by the Bay': '海灣港畔長堤', 'Stilt Fishermen of the Shallows': '淺灘立柱漁夫', 'Guardian of the Inca Terraces': '印加梯田的守望者', 'Embroidered Traditions': '刺繡傳統服飾', 'Riverside Terraces in Mist': '霧氣中的河畔梯田', 'Carved Window in Golden Stone': '金色石刻窗櫺', 'Street Performers in the Square': '廣場街頭藝人', 'Bronze Stroll in the Park': '公園漫步青銅像', 'Castle Glimpsed Through the Woods': '林間遙望城堡', 'Aerial Tapestry of Rooftops': '交織如織錦的屋頂俯瞰', 'Solitude on the Stormy Headland': '風暴海岬上的孤影', 'Pink Lotus Before the Peaks': '群峰前的粉紅蓮花', 'Golden Steppe Under Cobalt Sky': '鈷藍穹蒼下的金色草原', 'Amber Canopy in First Snow': '初雪中的琥珀樹冠', 'Reflections in the Cypress Swamp': '柏樹沼澤倒影', 'Autumn Tapestry on Still Water': '靜水中的秋日織錦', 'Grizzlies at the Salmon Falls': '鮭魚瀑布前的灰熊', 'Gulls Along the Curved Wall': '弧形石牆旁的海鷗', 'Emerald Amidst the Gold': '金黃林海中的常青樹', 'Blossom Reflected in Jade': '映入翡翠池水的花影', 'Waterfowl in Single File': '列隊滑行的水禽', 'Mist Over the Autumn Ridge': '秋嶺薄霧', 'Crimson Ribbon in the Woods': '林間赤紅花帶', 'Drifting on Rippled Silver': '銀波漣漪上的漂游', 'Tracks Across the Savanna': '草原上的車轍', 'Pink Tide on the Soda Lake': '鹼水湖上的粉紅潮汐', 'Tidal Patterns on Wet Sand': '濕沙上的潮汐紋理', 'Conifers Along the Emerald Shore': '翡翠湖畔的針葉林', 'Sunlit Pastures in Morning Haze': '晨霧中灑滿陽光的牧場', 'Emerald Canopy from Above': '高空俯瞰翠綠樹冠', 'Highland Meadow Under Blue Peaks': '藍峰下的高原草甸', 'Koi Beneath the Jade Surface': '碧波下的錦鯉', 'Antelopes in the Tall Grass': '高草叢中的羚羊', 'Lone Tree in the Mustard Fields': '油菜花田中的孤樹', 'Stillness on the Woodland River': '林間溪流的靜謐', 'Tapestry of Summer Blooms': '夏日繁花織錦', 'Sacred Cone Through the Veil': '雲紗中的神聖山錐', 'Prayer Flags Over Yamdrok Lake': '羊卓雍錯上空的經幡', 'Red Buttes of the High Desert': '高地沙漠的赤紅孤丘', 'Layered Silhouettes at Dawn': '破曉時的層疊剪影', 'Storm Clouds Over the Plateau': '高原上空的風暴雲層', 'Granite Towers Across the Sound': '海灣對岸的花崗岩尖峰', 'Crimson Rose Before Snow Peaks': '雪峰前的深紅玫瑰', 'Snow-Dusted Range Above the Bay': '海灣上方的覆雪山脈', 'Gateway Through the Polar Fjord': '極地峽灣的門戶', 'Sunbeams Through Alpine Ridges': '穿過高山山脊的陽光', 'Craggy Peaks Above Cloud Sea': '雲海之上的嶙峋奇峰', 'Golden Glow Over Canyon Walls': '峽谷岩壁上的金色餘暉', 'Glacial Basin Under Snow Peaks': '雪峰下的冰川盆地', 'Twilight Across Red Rock Gorge': '紅岩峽谷的暮色', 'Rain Curtain Over Distant Hills': '遠山上的雨幕', 'Highland Tarns in Summer Light': '夏日天光下的高原山塘', 'Lone Observer by the Alpine Lake': '高山湖畔的孤獨凝望者', 'Warm Mist in the Canyon Pass': '峽谷隘口的暖霧', 'Stillness Beneath Arid Ridges': '乾旱山脊下的靜謐', 'Broad Horizon of the Range': '綿延山脈的遼闊地平線', 'Mist Merging Sky and Water': '水天相接的薄霧', 'Highland Lake in Golden Grass': '金草環抱的高原湖泊', 'Pale Rainbow Over Open Sea': '開闊海面上的淡虹', 'Caravan Along the Blazing Ridge': '熾熱沙脊上的行旅隊伍', 'Amber Sun Over the Bay': '海灣上方的琥珀夕陽', 'Dune Silhouettes at Dusk': '黃昏時的沙丘剪影', 'Walking the Saffron Sands': '行走於番紅花般的沙地', 'Golden Reeds by Calm Water': '靜水旁的金色蘆葦', 'Evening March Across the Sands': '沙海上的暮色行進', 'Soft Sun Over Still Waters': '靜水上空的柔和夕陽', 'Stone Path Through Green Foliage': '穿過綠葉的石徑', 'Sunlit Cliff Against Azure Sky': '蔚藍天空下的向陽岩壁', 'Blossom Branch at Dusk': '暮色中的花枝', 'Ruins Framed in Golden Light': '金色光影中的古蹟石柱', 'Twin Figures in the Golden Surf': '金色浪花中的雙影', 'Double Arc Amidst Storm Clouds': '風暴雲層間的雙重彩虹', 'Distant Boats in Silver Mist': '銀霧中的遠舟'};
+    const photoLocTcMap = {'QUEENSTOWN, NEW ZEALAND': '皇后鎮，紐西蘭', 'PALMYRA, SYRIA': '帕米拉，敘利亞', 'DINAN, FRANCE': '迪南，法國', 'GREENLAND': '格陵蘭', 'AMAZON RAINFOREST': '亞馬遜雨林', 'ALASKA, UNITED STATES': '阿拉斯加，美國', 'ANTARCTIC PENINSULA, ANTARCTICA': '南極半島，南極洲', 'ATLANTIC COAST, PORTUGAL': '大西洋沿岸，葡萄牙', 'KO YAO, PHANG NGA': '長島縣，泰國攀牙', 'BALI, INDONESIA': '峇里島，印尼', 'LAKE LOUISE, ALBERTA': '路易斯湖，加拿大艾伯塔', 'BANFF, ALBERTA': '班夫，加拿大亞伯達省', 'BEIJING, CHINA': '北京，中國', 'BRETAGNE, FRANCE': '布列塔尼，法國', 'CADDO LAKE, TEXAS': '卡多湖，美國德州', 'CHINCHERO, PERU': '欽切羅，秘魯', 'COTSWOLDS, ENGLAND': '科茨沃爾德，英國', 'DANXIA, GUANGDONG': '丹霞，中國廣東', 'DOURO VALLEY, PORTUGAL': '杜羅河谷，葡萄牙', 'DUNHUANG, GANSU': '敦煌，中國甘肅', 'ERG CHEBBI, MOROCCO': '舍比沙丘，摩洛哥', 'ERHAI LAKE, YUNNAN': '洱海，中國雲南', 'FEZ, MOROCCO': '非斯，摩洛哥', 'FURANO, HOKKAIDO': '富良野，日本北海道', 'GRAND CANYON, ARIZONA': '大峽谷，美國亞利桑那州', 'GUILIN, GUANGXI': '桂林，中國廣西', 'DEEP WATER BAY, HONG KONG': '深水灣，香港', 'REPULSE BAY, HONG KONG': '淺水灣，香港', 'HOHENSCHWANGAU, BAVARIA': '霍恩施萬高，德國巴伐利亞', 'HOKKAIDO, JAPAN': '北海道，日本', 'HUANGSHAN, ANHUI': '黃山，中國安徽', 'ICELAND': '冰島', 'INNER MONGOLIA, CHINA': '內蒙古，中國', 'JIUZHAIGOU, SICHUAN': '九寨溝，中國四川', 'KAMIKOCHI, NAGANO': '上高地，日本長野縣', 'KANAS, XINJIANG': '喀納斯，中國新疆', 'KATMAI, ALASKA': '卡特邁，美國阿拉斯加', 'KOGGALA, SRI LANKA': '科加拉，斯里蘭卡', 'KUNMING, YUNNAN': '昆明，中國雲南', 'SYDNEY, AUSTRALIA': '雪梨，澳洲', 'KYOTO, JAPAN': '京都，日本', 'LADAKH, INDIA': '拉達克，印度', 'LAKE DISTRICT, ENGLAND': '湖區，英國', 'LAKE NAKURU, KENYA': '納庫魯湖，肯亞', 'EAST AFRICA': '東非', 'LEMAIRE CHANNEL, ANTARCTICA': '勒梅爾海峽，南極洲', 'LUOPING, YUNNAN': '羅平，中國雲南', 'MAASAI MARA, KENYA': '馬賽馬拉，肯亞', 'MACHU PICCHU, PERU': '馬丘比丘，秘魯', 'MADRID, SPAIN': '馬德里，西班牙', 'MERZOUGA, MOROCCO': '梅爾祖卡，摩洛哥', 'MONUMENT VALLEY, UTAH': '紀念碑谷，美國猶他州', 'MOUNT FUJI, SHIZUOKA': '富士山，日本靜岡縣', 'NAMTSO, TIBET': '納木錯，中國西藏', 'TIBET, CHINA': '西藏，中國', 'PONT DU GARD, FRANCE': '加爾橋，法國', 'NIAGARA FALLS, ONTARIO': '尼亞加拉瀑布，加拿大安大略省', 'NIKKO, TOCHIGI': '日光，日本栃木縣', 'NORMANDY, FRANCE': '諾曼第，法國', 'PATAGONIA, CHILE': '巴塔哥尼亞，智利', 'PERSEPOLIS, IRAN': '波斯波利斯，伊朗', 'PETRA, JORDAN': '佩特拉，約旦', 'SAHARA DESERT, MOROCCO': '撒哈拉沙漠，摩洛哥', 'DONOSTIA-SAN SEBASTIÁN, SPAIN': '多若斯迪亞，西班牙', 'TAI TAM INTERMEDIATE RESERVOIR, HONG KONG': '大潭中水塘，香港', 'SALAMANCA, SPAIN': '薩拉曼卡，西班牙', 'GRAND CANYON VILLAGE, ARIZONA': '大峽谷村，美國亞利桑那', 'SALAR DE UYUNI, BOLIVIA': '烏尤尼鹽沼，玻利維亞', 'SAN SEBASTIÁN, SPAIN': '聖塞瓦斯蒂安，西班牙', 'SANTIAGO, CHILE': '聖地牙哥，智利', 'SCOTTISH HIGHLANDS, SCOTLAND': '高地，蘇格蘭', 'SELJALANDSFOSS, ICELAND': '塞里雅蘭瀑布，冰島', 'SERENGETI, TANZANIA': '塞倫蓋蒂，坦尚尼亞', 'SHANGRI-LA, YUNNAN': '香格里拉，中國雲南', 'WICKLOW, IRELAND': '威克洛，愛爾蘭', 'LIVERPOOL, UNITED KINGDOM': '利物浦，英國', 'ST. PETERSBURG, RUSSIA': '聖彼得堡，俄羅斯', 'RUSSIA': '俄羅斯', 'TIANSHAN, XINJIANG': '天山，中國新疆', 'TIBETAN PLATEAU, QINGHAI': '青藏高原，中國青海', 'TORRES DEL PAINE, CHILE': '百內國家公園，智利', 'WADI RUM, JORDAN': '瓦迪拉姆，約旦', 'WEST LAKE, ZHEJIANG': '西湖，中國浙江', 'YAMDROK LAKE, TIBET': '羊卓雍錯，中國西藏', 'YANGSHUO, GUANGXI': '陽朔，中國廣西', 'YUNNAN, CHINA': '雲南，中國', 'ZHANGJIAJIE, HUNAN': '張家界，中國湖南'};
+    const photoDescTcMap = {'A pale full moon rising above snow-draped peaks mirrored in calm polar waters.': '蒼白的滿月在覆雪山峰之上緩緩升起，倒映於平靜的極地水域中。', 'A lone penguin standing across a vast snowfield beneath rugged Antarctic mountains.': '一隻孤獨的企鵝佇立在遼闊雪原上，身後是崎嶇的南極群山。', 'A broad weir spilling a uniform veil of water against lush green hills.': '寬闊的堰堤傾瀉出均勻的水簾，襯托著蔥鬱的翠綠山丘。', 'Turquoise river currents curving over a sheer brink into rising mist.': '碧綠的河水漫過陡峭崖緣傾瀉而下，激起陣陣水霧。', 'Hundreds of penguins gathered on a rocky shore facing drifting tabular ice.': '數百隻企鵝聚集在岩岸上，面朝漂流的板狀浮冰。', 'Sculpted azure icebergs resting along a still polar shoreline.': '雕琢般的湛藍冰山靜臥在平靜的極地海岸線上。', 'Mineral-blue travertine pools framed by golden autumn forest slopes.': '礦物藍的鈣華水池掩映在金黃秋林山坡之間。', 'Foaming mountain rapids rushing beneath vibrant autumn foliage.': '泛著白沫的山澗急流在絢麗的秋葉下奔騰而過。', 'Distant volcanic peaks floating above a glassy high-altitude salt pan.': '遠方的火山峰巒彷彿漂浮在如鏡面般的高海拔鹽沼之上。', 'A slender ribbon of glacial water dropping sixty meters into a mossy pool.': '纖細的冰川水流如絲帶般從六十公尺高處墜入青苔水潭。', 'Twin cascades tumbling down volcanic cliffs into a vivid green valley.': '雙道瀑布沿著火山岩壁傾瀉而下，匯入鮮綠的山谷。', 'Broad icefields sweeping across rugged sub-polar ridges.': '廣袤的冰原橫掃崎嶇的亞極地山脊。', 'Broken sea ice stretching quietly across a cold polar strait.': '破碎的海冰在寒冷的極地海峽上靜靜鋪展。', 'Travelers crossing golden sands beneath weathered sandstone cliffs.': '旅人穿行於金色沙地之間，頭頂是風化的砂岩峭壁。', 'Soaring canyon walls framing a sliver of sky along the ancient gorge.': '高聳的峽谷岩壁沿著古老峽谷框出一線天光。', 'A solitary fluted stone pillar standing beneath radiating clouds.': '一根孤立的凹槽石柱矗立在放射狀雲層之下。', 'An equestrian monument silhouetted against an overcast northern sky.': '青銅騎士雕像在陰沉的北方天幕下勾勒出剪影。', 'Inca dry-stone masonry framing the sacred peak above terraced ruins.': '印加乾砌石牆框出梯田遺址上方的神聖山峰。', 'Crimson calligraphy characters floating across glass above distant mountains.': '朱紅書法字體懸浮於玻璃之上，遠方是層疊山巒。', 'A rider perched atop a dromedary against a deep desert sky.': '騎手端坐於單峰駱駝背上，背景是深邃的沙漠天空。', 'Delicate cherry trees and manicured pines reflected in a tranquil garden lake.': '纖細的櫻花樹與修剪雅緻的松木倒映在寧靜的園林湖泊中。', 'Sunbeams filtering through monumental stone pillars of an ancient hall.': '陽光穿透古老大殿宏偉的石柱灑落。', 'Looking through a weathered stone doorway toward the green Andes summit.': '透過風化的石門框望向翠綠的安地斯山峰。', 'Rows of empty red café chairs arranged across sandstone arcades.': '一排排空置的紅色咖啡館座椅整齊排列在砂岩拱廊前。', 'Whitewashed walls and ochre roofs stepped along a high Tibetan slope.': '粉刷雪白的牆壁與赭黃屋頂沿著高聳的藏地山坡層層疊落。', 'Traditional garden architecture nestled within a broad grassy expanse.': '傳統園林建築坐落於開闊的草地之中。', 'Terraced coastal buildings weathering whitecaps along a rocky headland.': '層疊的沿海建築在岩石海岬上迎接著翻湧的白浪。', 'Gentle waves rolling past a stone pier beneath coastal hills.': '輕柔的海浪拍打著石堤，後方是起伏的沿海山丘。', 'Wooden poles rising from clear coastal waters over coral boulders.': '木柱自清澈的海水中升起，立於珊瑚礁石之上。', 'A llama resting serenely on the high slopes overlooking Machu Picchu.': '一隻羊駝在俯瞰馬丘比丘的高坡上安然棲息。', 'Two women in vibrant woven attire seated together in warm daylight.': '兩位身穿鮮豔織錦傳統服飾的女子在溫暖日光下並肩而坐。', 'Stone embankments and hillside dwellings reflected in quiet waters.': '石砌堤岸與山坡民居倒映在靜謐的水面上。', 'Sunlight grazing ancient relief carvings around a recessed stone aperture.': '陽光掠過凹陷石窗周圍古老的浮雕紋飾。', 'Acrobats entertaining an afternoon crowd on a European cobblestone plaza.': '街頭雜技藝人在歐洲鵝卵石廣場上為午後人群帶來表演。', 'A life-sized pedestrian sculpture standing quietly along a tree-lined path.': '一座等身大小的步行者雕塑靜靜立於林蔭小徑旁。', 'Pale turrets rising softly through a green archway of summer foliage.': '淡雅的塔樓在夏日枝葉交織的綠意拱門中若隱若現。', 'Warm sunlit facades packed densely across an old hillside quarter.': '溫暖陽光灑滿古老山坡街區密集相連的建築立面。', 'A lone figure seated on dark coastal rocks surrounded by churning surf.': '孤獨的身影坐在深色海岸礁石上，四周是翻騰的浪花。', 'Blooming lotus buds rising above broad green leaves against distant karst hills.': '綻放的蓮花花蕾在寬闊荷葉間升起，遠方是喀斯特山丘。', 'Wind-swept amber grasslands stretching beneath deep blue high-altitude clouds.': '微風吹拂的琥珀色草原在深藍的高海拔雲層下無邊延伸。', 'Golden larch trees glowing against a frosted mountainside.': '金黃的落葉松在覆霜的山坡襯托下閃耀光芒。', 'Slender russet trunks standing upright in mirror-still woodland waters.': '纖細的紅褐色樹幹挺立在如鏡面般平靜的林間水域中。', 'Crimson and ochre hillside foliage mirrored cleanly in a quiet mountain pond.': '赤紅與赭黃的山坡秋葉清晰倒映在靜謐的山塘之中。', 'Brown bears wading into rushing river rapids during the autumn run.': '棕熊在秋季洄游期間涉入湍急的河道急流中。', 'A row of white seagulls perched neatly along a lakeside stone parapet.': '一排白色海鷗整齊棲息在湖畔的石砌矮牆上。', 'A solitary evergreen standing tall inside a sea of autumn birch foliage.': '一棵孤立的常青樹挺拔矗立在金秋白樺林海之中。', 'A flowering pink cherry tree illuminating a tranquil green woodland pool.': '盛開的粉紅櫻花樹點亮了寧靜翠綠的林間水潭。', 'A line of ducks gliding across sunlit ripples on a calm river.': '一列水鴨在平靜河面灑滿陽光的漣漪上滑行。', 'Low clouds drifting across distant forested hills touched with fall color.': '低垂的雲霧掠過染上秋色的遠方林丘。', 'A vivid band of red wildflowers blooming along a lush forest floor.': '一條鮮豔的紅色野花帶沿著茂密的林地地面盛開。', 'Waterfowl floating gently across metallic lake ripples in quiet morning light.': '靜謐晨光中，水禽在泛著金屬光澤的湖面漣漪上輕輕漂浮。', 'Twin wheel ruts leading toward distant silhouettes on the open plains.': '雙道車轍延伸向開闊平原上遠方的剪影。', 'Thousands of flamingos gathering across shallow alkaline waters in soft mist.': '數千隻紅鶴在柔和薄霧中的淺灘鹼水湖面上聚集。', 'Receding ocean waves carving silver ribbons along a monochrome shore.': '退去的海浪在單色海岸上刻畫出銀白色的波紋絲帶。', 'Dense evergreen trees mirrored in the still green edge of a highland lake.': '茂密的常青樹倒映在高原湖泊平靜翠綠的水岸邊緣。', 'Winding meadow paths rolling through lush green hills under soft mist.': '蜿蜒的草甸小徑在柔和薄霧下穿過蔥鬱的翠綠山丘。', 'Patches of sunlight illuminating undulating forested ridges across a wide valley.': '斑駁陽光灑落遼闊山谷中起伏的森林山脊。', 'Expansive green grasslands stretching toward mist-veiled blue mountain slopes.': '廣闊的綠色草地向著薄霧籠罩的藍色山坡延伸。', 'Vibrant orange and white carp gliding through a sunlit garden pond.': '鮮豔的橙白錦鯉在灑滿陽光的園林池塘中游弋。', 'Two gazelles pausing alertly amidst dry golden woodland scrub.': '兩隻瞪羚在乾燥金黃的林地灌木叢中警覺駐足。', 'A tall green tree rising from a sea of bright yellow blossoms under clear skies.': '晴朗天空下，一棵高大的綠樹從明亮的金黃花海中挺立而出。', 'Overhanging green boughs mirrored cleanly in dark, glass-calm river waters.': '垂落的翠綠枝椏在如玻璃般平靜的深色河水中清晰倒影。', 'Magenta, coral, and golden flowers woven together in a sunlit garden border.': '洋紅、珊瑚色與金黃花朵在灑滿陽光的庭院花壇中交織。', 'A symmetrical volcanic peak emerging faintly above a sea of morning clouds.': '對稱的火山錐峰在晨雲之海上方隱約浮現。', 'Colorful Tibetan prayer flags fluttering above turquoise highland waters.': '五彩藏族經幡在碧綠的高原湖水上迎風飄揚。', 'Weathered sandstone mesas stretching across a vast ochre horizon.': '風化的砂岩台地在遼闊的赭色地平線上綿延。', 'Blue mountain ridges fading softly into warm amber twilight skies.': '藍色的山脊在溫暖琥珀色的暮光天幕中柔和漸隱。', 'Dramatic slate clouds sweeping above a golden high-altitude basin.': '充滿戲劇張力的青灰雲層掠過金黃的高海拔盆地。', 'Jagged Patagonian peaks rising beyond cold blue fjord waters.': '鋸齒般的巴塔哥尼亞山峰在冰冷湛藍的峽灣水域後方崛起。', 'A single red blossom blooming against distant white-capped ridges and cobalt sky.': '一朵深紅花朵在遠方積雪山脊與鈷藍天空襯托下綻放。', 'Crisp white mountain flanks mirrored across a tranquil sub-arctic inlet.': '潔白的山坡倒映在寧靜的亞北極海灣之中。', 'Steep snow-streaked cliffs framing a narrow glacial channel.': '陡峭的積雪岩壁夾峙出一條狹窄的冰川水道。', 'Slanted light piercing deep valleys across rugged mountain folds.': '斜射的光線穿過崎嶇山褶，照亮深邃山谷。', 'Sharp rocky summits rising through drifting morning clouds from an elevated vantage.': '從高處俯瞰，尖銳的岩峰穿過漂浮的晨雲升起。', 'Warm late light igniting stratified sandstone ridges and deep gorges.': '溫暖的傍晚光線點亮層疊的砂岩山脊與深邃峽谷。', 'Milky turquoise waters nestled beneath steep rocky walls and snowfields.': '乳碧色的湖水靜臥在陡峭岩壁與雪原之下。', 'Violet shadows and warm amber cliffs stretching along a winding desert canyon.': '紫羅蘭色陰影與溫暖琥珀色岩壁沿著蜿蜒的沙漠峽谷延伸。', 'Heavy storm clouds trailing showers across low coastal ridges and dark water.': '厚重的風暴雲層在低矮的沿海山脊與深色水面上拖曳陣雨。', 'Small mountain lakes dotting green upland terrain under soft daylight.': '柔和日光下，小型高山湖泊點綴在翠綠的高地地形中。', 'A solitary figure standing beside still sapphire waters beneath clear mountain skies.': '晴朗山空下，孤獨的身影立於平靜的湛藍湖水旁。', 'Soft golden haze drifting between steep rocky slopes and autumn foliage.': '柔和的金色薄霧在陡峭岩坡與秋葉之間飄盪。', 'Barren mountain slopes reflected calmly in deep blue alpine waters.': '荒蕪的山坡平靜倒映在深藍的高山湖水中。', 'A sweeping mountain chain rising across a calm valley floor under pale skies.': '淡雅天幕下，連綿的山脈自平靜的谷底升起。', 'A quiet expanse where pale fog softens distant shorelines into silver light.': '蒼白的霧氣將遠方海岸線柔化成銀色光影的靜謐天地。', 'Deep blue water bordered by sun-warmed slopes beneath crisp mountain air.': '清冽山風下，深藍湖水與被陽光暖照的山坡相依。', 'A faint arc of light descending toward dark ocean swells beneath scattered clouds.': '散雲之下，一道微弱的光弧向著深暗的海浪傾瀉而下。', 'Camels silhouetted along a crest of sand against a fiery sunset sky.': '駱駝在熾熱的落日天幕下沿著沙脊勾勒出剪影。', 'A low sun dipping behind dark headlands, casting a shimmering path across water.': '低垂的夕陽沉入深色海岬後方，在水面上投射出閃爍光徑。', 'Camels crossing sunlit sand ridges as evening shadows lengthen across the desert.': '暮色拉長沙漠中的影子時，駱駝正穿行於灑滿陽光的沙脊之間。', 'A solitary traveler ascending bright orange dunes under late afternoon light.': '午末光線下，孤獨的旅人正攀登明亮的橙色沙丘。', 'Warm dusk light glinting across quiet marshland and gentle reflections.': '溫暖的暮光在寧靜的沼澤與柔和倒影上閃爍。', 'A line of camels moving steadily in silhouette against fading twilight.': '在漸逝的暮色中，一列駱駝以剪影姿態穩步前行。', 'A hazy golden disc hovering above a tranquil mirror-like lake.': '朦朧的金色圓日懸浮在如鏡面般寧靜的湖泊上方。', 'A quiet garden walkway bordered by lush greenery and dappled light.': '被繁茂綠意與斑駁光影環繞的寧靜庭園小徑。', 'Warm light catching a sheer rock face beneath an unbroken blue sky.': '無垠藍天下，暖光照亮陡峭的岩壁。', 'Delicate flowering branches silhouetted gently against twilight water.': '纖細的花枝在暮色水面上輕柔勾勒出輪廓。', 'Ancient stone columns bathed in warm sunset glow against evening clouds.': '晚霞雲層下，古老石柱沐浴在溫暖的夕陽餘暉中。', 'Two silhouettes standing in glowing shallow waves beneath a low sun.': '低垂夕陽下，兩道剪影立於閃耀著光芒的淺灘浪花中。', 'Vivid bands of rainbow light curving over dark evening clouds.': '鮮明的彩虹光帶在深沉的晚雲之上劃出弧線。', 'Small vessels resting quietly on calm water beneath overhanging boughs.': '垂落枝椏下，小船在平靜水面上靜靜停泊。'};
+
+    function getPhotoTitle(photo, lang) {
+      if (!photo) return '';
+      if (lang === 'en') return photo.title || '';
+      const tcVal = photoTitleTcMap[photo.title] || photo.title || '';
+      return convertTextLang(tcVal, lang);
+    }
+
+    function getPhotoLocation(photo, lang) {
+      if (!photo) return '';
+      if (lang === 'en') return photo.location || '';
+      const tcVal = photoLocTcMap[photo.location] || photo.location || '';
+      return convertTextLang(tcVal, lang);
+    }
+
+    function getPhotoDescription(photo, lang) {
+      if (!photo) return '';
+      const raw = (photo.description && (photo.description[lang] || photo.description.en)) || '';
+      if (lang === 'en') return raw;
+      const tcVal = photoDescTcMap[photo.description?.en] || raw;
+      return convertTextLang(tcVal, lang);
+    }
+
+    function galleryApp() {
+      return {
+        gridCols: 3,
+        viewportWidth: window.innerWidth,
+        activeCategory: 'all',
+        lightboxOpen: false,
+        currentPhotoIndex: 0,
+        currentPhoto: null,
+        currentLang: 'en',
+        loadProgress: 12,
+        galleryReady: false,
+
+        categories: [
+          { id: 'all', label: { en: 'All', tc: '全部', sc: '全部' } },
+          { id: 'mountains', label: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' } },
+          { id: 'sunsets', label: { en: 'Sunsets', tc: '日落餘暉', sc: '日落余晖' } },
+          { id: 'culture', label: { en: 'Culture', tc: '人文印記', sc: '人文印记' } },
+          { id: 'forests', label: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' } },
+          { id: 'cascades', label: { en: 'Cascades', tc: '飛瀑流泉', sc: '飞瀑流泉' } }
+        ],
+
+        photos: [
+          // Cascades (1 - 13)
+          {
+            id: 1,
+            title: 'Moonlit Glacier Ridge',
+            vol: { en: 'Cascades', tc: '飛瀑流泉', sc: '飞瀑流泉' },
+            categoryId: 'cascades',
+            location: 'ANTARCTIC PENINSULA, ANTARCTICA',
+            coords: '64.8250° S, 62.6167° W',
+            description: {
+              en: 'A pale full moon rising above snow-draped peaks mirrored in calm polar waters.',
+              tc: 'A pale full moon rising above snow-draped peaks mirrored in calm polar waters.',
+              sc: 'A pale full moon rising above snow-draped peaks mirrored in calm polar waters.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Cascades-1.webp'
+          },
+          {
+            id: 2,
+            title: 'Solitary Gentoo on Ice',
+            vol: { en: 'Cascades', tc: '飛瀑流泉', sc: '飞瀑流泉' },
+            categoryId: 'cascades',
+            location: 'ANTARCTIC PENINSULA, ANTARCTICA',
+            coords: '64.8250° S, 62.6167° W',
+            description: {
+              en: 'A lone penguin standing across a vast snowfield beneath rugged Antarctic mountains.',
+              tc: 'A lone penguin standing across a vast snowfield beneath rugged Antarctic mountains.',
+              sc: 'A lone penguin standing across a vast snowfield beneath rugged Antarctic mountains.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Cascades-2.webp'
+          },
+          {
+            id: 3,
+            title: 'Curtain of White Water',
+            vol: { en: 'Cascades', tc: '飛瀑流泉', sc: '飞瀑流泉' },
+            categoryId: 'cascades',
+            location: 'TAI TAM INTERMEDIATE RESERVOIR, HONG KONG',
+            coords: '22.2535° N, 114.2165° E',
+            description: {
+              en: 'A broad weir spilling a uniform veil of water against lush green hills.',
+              tc: 'A broad weir spilling a uniform veil of water against lush green hills.',
+              sc: 'A broad weir spilling a uniform veil of water against lush green hills.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Cascades-3.webp'
+          },
+          {
+            id: 4,
+            title: 'Emerald Horseshoe Plunge',
+            vol: { en: 'Cascades', tc: '飛瀑流泉', sc: '飞瀑流泉' },
+            categoryId: 'cascades',
+            location: 'NIAGARA FALLS, ONTARIO',
+            coords: '43.0799° N, 79.0747° W',
+            description: {
+              en: 'Turquoise river currents curving over a sheer brink into rising mist.',
+              tc: 'Turquoise river currents curving over a sheer brink into rising mist.',
+              sc: 'Turquoise river currents curving over a sheer brink into rising mist.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Cascades-4.webp'
+          },
+          {
+            id: 5,
+            title: 'Penguin Colony by the Icebergs',
+            vol: { en: 'Cascades', tc: '飛瀑流泉', sc: '飞瀑流泉' },
+            categoryId: 'cascades',
+            location: 'ANTARCTIC PENINSULA, ANTARCTICA',
+            coords: '64.8250° S, 62.6167° W',
+            description: {
+              en: 'Hundreds of penguins gathered on a rocky shore facing drifting tabular ice.',
+              tc: 'Hundreds of penguins gathered on a rocky shore facing drifting tabular ice.',
+              sc: 'Hundreds of penguins gathered on a rocky shore facing drifting tabular ice.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Cascades-5.webp'
+          },
+          {
+            id: 6,
+            title: 'Blue Ice Horizon',
+            vol: { en: 'Cascades', tc: '飛瀑流泉', sc: '飞瀑流泉' },
+            categoryId: 'cascades',
+            location: 'TORRES DEL PAINE, CHILE',
+            coords: '50.9423° S, 73.4068° W',
+            description: {
+              en: 'Sculpted azure icebergs resting along a still polar shoreline.',
+              tc: 'Sculpted azure icebergs resting along a still polar shoreline.',
+              sc: 'Sculpted azure icebergs resting along a still polar shoreline.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Cascades-6.webp'
+          },
+          {
+            id: 7,
+            title: 'Autumn Terraces of Turquoise',
+            vol: { en: 'Cascades', tc: '飛瀑流泉', sc: '飞瀑流泉' },
+            categoryId: 'cascades',
+            location: 'JIUZHAIGOU, SICHUAN',
+            coords: '33.2600° N, 103.9186° E',
+            description: {
+              en: 'Mineral-blue travertine pools framed by golden autumn forest slopes.',
+              tc: 'Mineral-blue travertine pools framed by golden autumn forest slopes.',
+              sc: 'Mineral-blue travertine pools framed by golden autumn forest slopes.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Cascades-7.webp'
+          },
+          {
+            id: 8,
+            title: 'Sylvan Torrent in Gold',
+            vol: { en: 'Cascades', tc: '飛瀑流泉', sc: '飞瀑流泉' },
+            categoryId: 'cascades',
+            location: 'JIUZHAIGOU, SICHUAN',
+            coords: '33.2600° N, 103.9186° E',
+            description: {
+              en: 'Foaming mountain rapids rushing beneath vibrant autumn foliage.',
+              tc: 'Foaming mountain rapids rushing beneath vibrant autumn foliage.',
+              sc: 'Foaming mountain rapids rushing beneath vibrant autumn foliage.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Cascades-8.webp'
+          },
+          {
+            id: 9,
+            title: 'Mirror of the Salt Flats',
+            vol: { en: 'Cascades', tc: '飛瀑流泉', sc: '飞瀑流泉' },
+            categoryId: 'cascades',
+            location: 'GRAND CANYON VILLAGE, ARIZONA',
+            coords: '36.0544° N, 112.1401° W',
+            description: {
+              en: 'Distant volcanic peaks floating above a glassy high-altitude salt pan.',
+              tc: 'Distant volcanic peaks floating above a glassy high-altitude salt pan.',
+              sc: 'Distant volcanic peaks floating above a glassy high-altitude salt pan.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Cascades-9.webp'
+          },
+          {
+            id: 10,
+            title: 'Veil Over the Basalt Cliff',
+            vol: { en: 'Cascades', tc: '飛瀑流泉', sc: '飞瀑流泉' },
+            categoryId: 'cascades',
+            location: 'SELJALANDSFOSS, ICELAND',
+            coords: '63.6156° N, 19.9886° W',
+            description: {
+              en: 'A slender ribbon of glacial water dropping sixty meters into a mossy pool.',
+              tc: 'A slender ribbon of glacial water dropping sixty meters into a mossy pool.',
+              sc: 'A slender ribbon of glacial water dropping sixty meters into a mossy pool.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Cascades-10.webp'
+          },
+          {
+            id: 11,
+            title: 'Emerald Meadow Falls',
+            vol: { en: 'Cascades', tc: '飛瀑流泉', sc: '飞瀑流泉' },
+            categoryId: 'cascades',
+            location: 'SELJALANDSFOSS, ICELAND',
+            coords: '63.6156° N, 19.9886° W',
+            description: {
+              en: 'Twin cascades tumbling down volcanic cliffs into a vivid green valley.',
+              tc: 'Twin cascades tumbling down volcanic cliffs into a vivid green valley.',
+              sc: 'Twin cascades tumbling down volcanic cliffs into a vivid green valley.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Cascades-11.webp'
+          },
+          {
+            id: 12,
+            title: 'Glacial Valley Panorama',
+            vol: { en: 'Cascades', tc: '飛瀑流泉', sc: '飞瀑流泉' },
+            categoryId: 'cascades',
+            location: 'GREENLAND',
+            coords: '69.2169° N, 51.1008° W',
+            description: {
+              en: 'Broad icefields sweeping across rugged sub-polar ridges.',
+              tc: 'Broad icefields sweeping across rugged sub-polar ridges.',
+              sc: 'Broad icefields sweeping across rugged sub-polar ridges.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Cascades-12.webp'
+          },
+          {
+            id: 13,
+            title: 'Drift Ice Passage',
+            vol: { en: 'Cascades', tc: '飛瀑流泉', sc: '飞瀑流泉' },
+            categoryId: 'cascades',
+            location: 'ANTARCTIC PENINSULA, ANTARCTICA',
+            coords: '64.8250° S, 62.6167° W',
+            description: {
+              en: 'Broken sea ice stretching quietly across a cold polar strait.',
+              tc: 'Broken sea ice stretching quietly across a cold polar strait.',
+              sc: 'Broken sea ice stretching quietly across a cold polar strait.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Cascades-13.webp'
+          },
+
+          // Culture (14 - 37 -> Culture-1 to Culture-24)
+          {
+            id: 14,
+            title: 'Caravan in the Rose Desert',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'WADI RUM, JORDAN',
+            coords: '29.5765° N, 35.4211° E',
+            description: {
+              en: 'Travelers crossing golden sands beneath weathered sandstone cliffs.',
+              tc: 'Travelers crossing golden sands beneath weathered sandstone cliffs.',
+              sc: 'Travelers crossing golden sands beneath weathered sandstone cliffs.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-1.webp'
+          },
+          {
+            id: 15,
+            title: 'Sanctuary Through the Siq',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'PETRA, JORDAN',
+            coords: '30.3285° N, 35.4444° E',
+            description: {
+              en: 'Soaring canyon walls framing a sliver of sky along the ancient gorge.',
+              tc: 'Soaring canyon walls framing a sliver of sky along the ancient gorge.',
+              sc: 'Soaring canyon walls framing a sliver of sky along the ancient gorge.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-2.webp'
+          },
+          {
+            id: 16,
+            title: 'Column of the Ancient Empire',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'PERSEPOLIS, IRAN',
+            coords: '29.9352° N, 52.8914° E',
+            description: {
+              en: 'A solitary fluted stone pillar standing beneath radiating clouds.',
+              tc: 'A solitary fluted stone pillar standing beneath radiating clouds.',
+              sc: 'A solitary fluted stone pillar standing beneath radiating clouds.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-3.webp'
+          },
+          {
+            id: 17,
+            title: 'Bronze Rider in the Mist',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'LIVERPOOL, UNITED KINGDOM',
+            coords: '53.4106° N, 2.9779° W',
+            description: {
+              en: 'An equestrian monument silhouetted against an overcast northern sky.',
+              tc: 'An equestrian monument silhouetted against an overcast northern sky.',
+              sc: 'An equestrian monument silhouetted against an overcast northern sky.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-4.webp'
+          },
+          {
+            id: 18,
+            title: 'Portal to Huayna Picchu',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'MACHU PICCHU, PERU',
+            coords: '13.1631° S, 72.5450° W',
+            description: {
+              en: 'Inca dry-stone masonry framing the sacred peak above terraced ruins.',
+              tc: 'Inca dry-stone masonry framing the sacred peak above terraced ruins.',
+              sc: 'Inca dry-stone masonry framing the sacred peak above terraced ruins.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-5.webp'
+          },
+          {
+            id: 19,
+            title: 'Five Blessings',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'DEEP WATER BAY, HONG KONG',
+            coords: '22.2484° N, 114.1799° E',
+            description: {
+              en: 'Crimson calligraphy characters floating across glass above distant mountains.',
+              tc: 'Crimson calligraphy characters floating across glass above distant mountains.',
+              sc: 'Crimson calligraphy characters floating across glass above distant mountains.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-6.webp'
+          },
+          {
+            id: 20,
+            title: 'Dune Journey at High Noon',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'PALMYRA, SYRIA',
+            coords: '34.5608° N, 38.2672° E',
+            description: {
+              en: 'A rider perched atop a dromedary against a deep desert sky.',
+              tc: 'A rider perched atop a dromedary against a deep desert sky.',
+              sc: 'A rider perched atop a dromedary against a deep desert sky.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-7.webp'
+          },
+          {
+            id: 21,
+            title: 'Spring Blossoms by the Pond',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'KYOTO, JAPAN',
+            coords: '35.0116° N, 135.7681° E',
+            description: {
+              en: 'Delicate cherry trees and manicured pines reflected in a tranquil garden lake.',
+              tc: 'Delicate cherry trees and manicured pines reflected in a tranquil garden lake.',
+              sc: 'Delicate cherry trees and manicured pines reflected in a tranquil garden lake.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-8.webp'
+          },
+          {
+            id: 22,
+            title: 'Colonnade of Light',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'MADRID, SPAIN',
+            coords: '40.4168° N, 3.7038° W',
+            description: {
+              en: 'Sunbeams filtering through monumental stone pillars of an ancient hall.',
+              tc: 'Sunbeams filtering through monumental stone pillars of an ancient hall.',
+              sc: 'Sunbeams filtering through monumental stone pillars of an ancient hall.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-9.webp'
+          },
+          {
+            id: 23,
+            title: 'Threshold of the Cloud Citadel',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'MACHU PICCHU, PERU',
+            coords: '13.1631° S, 72.5450° W',
+            description: {
+              en: 'Looking through a weathered stone doorway toward the green Andes summit.',
+              tc: 'Looking through a weathered stone doorway toward the green Andes summit.',
+              sc: 'Looking through a weathered stone doorway toward the green Andes summit.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-10.webp'
+          },
+          {
+            id: 24,
+            title: 'Quiet Morning in Plaza Mayor',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'SALAMANCA, SPAIN',
+            coords: '40.9650° N, 5.6641° W',
+            description: {
+              en: 'Rows of empty red café chairs arranged across sandstone arcades.',
+              tc: 'Rows of empty red café chairs arranged across sandstone arcades.',
+              sc: 'Rows of empty red café chairs arranged across sandstone arcades.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-11.webp'
+          },
+          {
+            id: 25,
+            title: 'Hillside Monastery in Blue Sky',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'TIBET, CHINA',
+            coords: '29.6500° N, 91.1000° E',
+            description: {
+              en: 'Whitewashed walls and ochre roofs stepped along a high Tibetan slope.',
+              tc: 'Whitewashed walls and ochre roofs stepped along a high Tibetan slope.',
+              sc: 'Whitewashed walls and ochre roofs stepped along a high Tibetan slope.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-12.webp'
+          },
+          {
+            id: 26,
+            title: 'Pavilion in the Green Courtyard',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'PONT DU GARD, FRANCE',
+            coords: '43.9475° N, 4.5356° E',
+            description: {
+              en: 'Traditional garden architecture nestled within a broad grassy expanse.',
+              tc: 'Traditional garden architecture nestled within a broad grassy expanse.',
+              sc: 'Traditional garden architecture nestled within a broad grassy expanse.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-13.webp'
+          },
+          {
+            id: 27,
+            title: 'Cliffside Town Above the Surf',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'SAN SEBASTIÁN, SPAIN',
+            coords: '43.3183° N, 1.9812° W',
+            description: {
+              en: 'Terraced coastal buildings weathering whitecaps along a rocky headland.',
+              tc: 'Terraced coastal buildings weathering whitecaps along a rocky headland.',
+              sc: 'Terraced coastal buildings weathering whitecaps along a rocky headland.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-14.webp'
+          },
+          {
+            id: 28,
+            title: 'Harbor Promenade by the Bay',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'SAN SEBASTIÁN, SPAIN',
+            coords: '43.3183° N, 1.9812° W',
+            description: {
+              en: 'Gentle waves rolling past a stone pier beneath coastal hills.',
+              tc: 'Gentle waves rolling past a stone pier beneath coastal hills.',
+              sc: 'Gentle waves rolling past a stone pier beneath coastal hills.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-15.webp'
+          },
+          {
+            id: 29,
+            title: 'Stilt Fishermen of the Shallows',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'KOGGALA, SRI LANKA',
+            coords: '5.9875° N, 80.3264° E',
+            description: {
+              en: 'Wooden poles rising from clear coastal waters over coral boulders.',
+              tc: 'Wooden poles rising from clear coastal waters over coral boulders.',
+              sc: 'Wooden poles rising from clear coastal waters over coral boulders.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-16.webp'
+          },
+          {
+            id: 30,
+            title: 'Guardian of the Inca Terraces',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'MACHU PICCHU, PERU',
+            coords: '13.1631° S, 72.5450° W',
+            description: {
+              en: 'A llama resting serenely on the high slopes overlooking Machu Picchu.',
+              tc: 'A llama resting serenely on the high slopes overlooking Machu Picchu.',
+              sc: 'A llama resting serenely on the high slopes overlooking Machu Picchu.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-17.webp'
+          },
+          {
+            id: 31,
+            title: 'Embroidered Traditions',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'CHINCHERO, PERU',
+            coords: '13.3917° S, 72.0478° W',
+            description: {
+              en: 'Two women in vibrant woven attire seated together in warm daylight.',
+              tc: 'Two women in vibrant woven attire seated together in warm daylight.',
+              sc: 'Two women in vibrant woven attire seated together in warm daylight.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-18.webp'
+          },
+          {
+            id: 32,
+            title: 'Riverside Terraces in Mist',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'DOURO VALLEY, PORTUGAL',
+            coords: '41.1621° N, 7.7885° W',
+            description: {
+              en: 'Stone embankments and hillside dwellings reflected in quiet waters.',
+              tc: 'Stone embankments and hillside dwellings reflected in quiet waters.',
+              sc: 'Stone embankments and hillside dwellings reflected in quiet waters.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-19.webp'
+          },
+          {
+            id: 33,
+            title: 'Carved Window in Golden Stone',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'PERSEPOLIS, IRAN',
+            coords: '29.9352° N, 52.8914° E',
+            description: {
+              en: 'Sunlight grazing ancient relief carvings around a recessed stone aperture.',
+              tc: 'Sunlight grazing ancient relief carvings around a recessed stone aperture.',
+              sc: 'Sunlight grazing ancient relief carvings around a recessed stone aperture.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-20.webp'
+          },
+          {
+            id: 34,
+            title: 'Street Performers in the Square',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'MADRID, SPAIN',
+            coords: '40.4155° N, 3.7074° W',
+            description: {
+              en: 'Acrobats entertaining an afternoon crowd on a European cobblestone plaza.',
+              tc: 'Acrobats entertaining an afternoon crowd on a European cobblestone plaza.',
+              sc: 'Acrobats entertaining an afternoon crowd on a European cobblestone plaza.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-21.webp'
+          },
+          {
+            id: 35,
+            title: 'Bronze Stroll in the Park',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'SANTIAGO, CHILE',
+            coords: '33.4489° S, 70.6693° W',
+            description: {
+              en: 'A life-sized pedestrian sculpture standing quietly along a tree-lined path.',
+              tc: 'A life-sized pedestrian sculpture standing quietly along a tree-lined path.',
+              sc: 'A life-sized pedestrian sculpture standing quietly along a tree-lined path.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-22.webp'
+          },
+          {
+            id: 36,
+            title: 'Castle Glimpsed Through the Woods',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'HOHENSCHWANGAU, BAVARIA',
+            coords: '47.5576° N, 10.7498° E',
+            description: {
+              en: 'Pale turrets rising softly through a green archway of summer foliage.',
+              tc: 'Pale turrets rising softly through a green archway of summer foliage.',
+              sc: 'Pale turrets rising softly through a green archway of summer foliage.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-23.webp'
+          },
+          {
+            id: 37,
+            title: 'Aerial Tapestry of Rooftops',
+            vol: { en: 'Culture', tc: '人文印記', sc: '人文印记' },
+            categoryId: 'culture',
+            location: 'FEZ, MOROCCO',
+            coords: '34.0617° N, 4.9778° W',
+            description: {
+              en: 'Warm sunlit facades packed densely across an old hillside quarter.',
+              tc: 'Warm sunlit facades packed densely across an old hillside quarter.',
+              sc: 'Warm sunlit facades packed densely across an old hillside quarter.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Culture-24.webp'
+          },
+
+          // Forests (38 - 63 -> Forests-1 to Forests-26)
+          {
+            id: 38,
+            title: 'Solitude on the Stormy Headland',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'ANTARCTIC PENINSULA, ANTARCTICA',
+            coords: '64.8250° S, 62.6167° W',
+            description: {
+              en: 'A lone figure seated on dark coastal rocks surrounded by churning surf.',
+              tc: 'A lone figure seated on dark coastal rocks surrounded by churning surf.',
+              sc: 'A lone figure seated on dark coastal rocks surrounded by churning surf.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-1.webp'
+          },
+          {
+            id: 39,
+            title: 'Pink Lotus Before the Peaks',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'YANGSHUO, GUANGXI',
+            coords: '24.7784° N, 110.4966° E',
+            description: {
+              en: 'Blooming lotus buds rising above broad green leaves against distant karst hills.',
+              tc: 'Blooming lotus buds rising above broad green leaves against distant karst hills.',
+              sc: 'Blooming lotus buds rising above broad green leaves against distant karst hills.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-2.webp'
+          },
+          {
+            id: 40,
+            title: 'Golden Steppe Under Cobalt Sky',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'INNER MONGOLIA, CHINA',
+            coords: '49.2122° N, 119.7658° E',
+            description: {
+              en: 'Wind-swept amber grasslands stretching beneath deep blue high-altitude clouds.',
+              tc: 'Wind-swept amber grasslands stretching beneath deep blue high-altitude clouds.',
+              sc: 'Wind-swept amber grasslands stretching beneath deep blue high-altitude clouds.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-3.webp'
+          },
+          {
+            id: 41,
+            title: 'Amber Canopy in First Snow',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'KANAS, XINJIANG',
+            coords: '48.7200° N, 87.0189° E',
+            description: {
+              en: 'Golden larch trees glowing against a frosted mountainside.',
+              tc: 'Golden larch trees glowing against a frosted mountainside.',
+              sc: 'Golden larch trees glowing against a frosted mountainside.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-4.webp'
+          },
+          {
+            id: 42,
+            title: 'Reflections in the Cypress Swamp',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'CADDO LAKE, TEXAS',
+            coords: '32.6832° N, 94.1227° W',
+            description: {
+              en: 'Slender russet trunks standing upright in mirror-still woodland waters.',
+              tc: 'Slender russet trunks standing upright in mirror-still woodland waters.',
+              sc: 'Slender russet trunks standing upright in mirror-still woodland waters.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-5.webp'
+          },
+          {
+            id: 43,
+            title: 'Autumn Tapestry on Still Water',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'KAMIKOCHI, NAGANO',
+            coords: '36.2489° N, 137.6347° E',
+            description: {
+              en: 'Crimson and ochre hillside foliage mirrored cleanly in a quiet mountain pond.',
+              tc: 'Crimson and ochre hillside foliage mirrored cleanly in a quiet mountain pond.',
+              sc: 'Crimson and ochre hillside foliage mirrored cleanly in a quiet mountain pond.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-6.webp'
+          },
+          {
+            id: 44,
+            title: 'Grizzlies at the Salmon Falls',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'KATMAI, ALASKA',
+            coords: '58.5553° N, 155.7867° W',
+            description: {
+              en: 'Brown bears wading into rushing river rapids during the autumn run.',
+              tc: 'Brown bears wading into rushing river rapids during the autumn run.',
+              sc: 'Brown bears wading into rushing river rapids during the autumn run.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-7.webp'
+          },
+          {
+            id: 45,
+            title: 'Gulls Along the Curved Wall',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'SYDNEY, AUSTRALIA',
+            coords: '33.8688° S, 151.2093° E',
+            description: {
+              en: 'A row of white seagulls perched neatly along a lakeside stone parapet.',
+              tc: 'A row of white seagulls perched neatly along a lakeside stone parapet.',
+              sc: 'A row of white seagulls perched neatly along a lakeside stone parapet.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-8.webp'
+          },
+          {
+            id: 46,
+            title: 'Emerald Amidst the Gold',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'HOKKAIDO, JAPAN',
+            coords: '43.5917° N, 142.4675° E',
+            description: {
+              en: 'A solitary evergreen standing tall inside a sea of autumn birch foliage.',
+              tc: 'A solitary evergreen standing tall inside a sea of autumn birch foliage.',
+              sc: 'A solitary evergreen standing tall inside a sea of autumn birch foliage.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-9.webp'
+          },
+          {
+            id: 47,
+            title: 'Blossom Reflected in Jade',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'KYOTO, JAPAN',
+            coords: '35.0116° N, 135.7681° E',
+            description: {
+              en: 'A flowering pink cherry tree illuminating a tranquil green woodland pool.',
+              tc: 'A flowering pink cherry tree illuminating a tranquil green woodland pool.',
+              sc: 'A flowering pink cherry tree illuminating a tranquil green woodland pool.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-10.webp'
+          },
+          {
+            id: 48,
+            title: 'Waterfowl in Single File',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'KAMIKOCHI, NAGANO',
+            coords: '36.2489° N, 137.6347° E',
+            description: {
+              en: 'A line of ducks gliding across sunlit ripples on a calm river.',
+              tc: 'A line of ducks gliding across sunlit ripples on a calm river.',
+              sc: 'A line of ducks gliding across sunlit ripples on a calm river.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-11.webp'
+          },
+          {
+            id: 49,
+            title: 'Mist Over the Autumn Ridge',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'ANTARCTIC PENINSULA, ANTARCTICA',
+            coords: '64.8250° S, 62.6167° W',
+            description: {
+              en: 'Low clouds drifting across distant forested hills touched with fall color.',
+              tc: 'Low clouds drifting across distant forested hills touched with fall color.',
+              sc: 'Low clouds drifting across distant forested hills touched with fall color.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-12.webp'
+          },
+          {
+            id: 50,
+            title: 'Crimson Ribbon in the Woods',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'HOKKAIDO, JAPAN',
+            coords: '43.5917° N, 142.4675° E',
+            description: {
+              en: 'A vivid band of red wildflowers blooming along a lush forest floor.',
+              tc: 'A vivid band of red wildflowers blooming along a lush forest floor.',
+              sc: 'A vivid band of red wildflowers blooming along a lush forest floor.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-13.webp'
+          },
+          {
+            id: 51,
+            title: 'Drifting on Rippled Silver',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'ANTARCTIC PENINSULA, ANTARCTICA',
+            coords: '64.8250° S, 62.6167° W',
+            description: {
+              en: 'Waterfowl floating gently across metallic lake ripples in quiet morning light.',
+              tc: 'Waterfowl floating gently across metallic lake ripples in quiet morning light.',
+              sc: 'Waterfowl floating gently across metallic lake ripples in quiet morning light.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-14.webp'
+          },
+          {
+            id: 52,
+            title: 'Tracks Across the Savanna',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'MAASAI MARA, KENYA',
+            coords: '1.4061° S, 35.0086° E',
+            description: {
+              en: 'Twin wheel ruts leading toward distant silhouettes on the open plains.',
+              tc: 'Twin wheel ruts leading toward distant silhouettes on the open plains.',
+              sc: 'Twin wheel ruts leading toward distant silhouettes on the open plains.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-15.webp'
+          },
+          {
+            id: 53,
+            title: 'Pink Tide on the Soda Lake',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'EAST AFRICA',
+            coords: '0.3667° S, 36.0833° E',
+            description: {
+              en: 'Thousands of flamingos gathering across shallow alkaline waters in soft mist.',
+              tc: 'Thousands of flamingos gathering across shallow alkaline waters in soft mist.',
+              sc: 'Thousands of flamingos gathering across shallow alkaline waters in soft mist.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-16.webp'
+          },
+          {
+            id: 54,
+            title: 'Tidal Patterns on Wet Sand',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'NORMANDY, FRANCE',
+            coords: '49.4144° N, 0.8322° W',
+            description: {
+              en: 'Receding ocean waves carving silver ribbons along a monochrome shore.',
+              tc: 'Receding ocean waves carving silver ribbons along a monochrome shore.',
+              sc: 'Receding ocean waves carving silver ribbons along a monochrome shore.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-17.webp'
+          },
+          {
+            id: 55,
+            title: 'Conifers Along the Emerald Shore',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'QUEENSTOWN, NEW ZEALAND',
+            coords: '45.0312° S, 168.6626° E',
+            description: {
+              en: 'Dense evergreen trees mirrored in the still green edge of a highland lake.',
+              tc: 'Dense evergreen trees mirrored in the still green edge of a highland lake.',
+              sc: 'Dense evergreen trees mirrored in the still green edge of a highland lake.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-18.webp'
+          },
+          {
+            id: 56,
+            title: 'Sunlit Pastures in Morning Haze',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'COTSWOLDS, ENGLAND',
+            coords: '51.8330° N, 1.8433° W',
+            description: {
+              en: 'Winding meadow paths rolling through lush green hills under soft mist.',
+              tc: 'Winding meadow paths rolling through lush green hills under soft mist.',
+              sc: 'Winding meadow paths rolling through lush green hills under soft mist.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-19.webp'
+          },
+          {
+            id: 57,
+            title: 'Emerald Canopy from Above',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'YUNNAN, CHINA',
+            coords: '25.0453° N, 102.7097° E',
+            description: {
+              en: 'Patches of sunlight illuminating undulating forested ridges across a wide valley.',
+              tc: 'Patches of sunlight illuminating undulating forested ridges across a wide valley.',
+              sc: 'Patches of sunlight illuminating undulating forested ridges across a wide valley.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-20.webp'
+          },
+          {
+            id: 58,
+            title: 'Highland Meadow Under Blue Peaks',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'SHANGRI-LA, YUNNAN',
+            coords: '27.8269° N, 99.7065° E',
+            description: {
+              en: 'Expansive green grasslands stretching toward mist-veiled blue mountain slopes.',
+              tc: 'Expansive green grasslands stretching toward mist-veiled blue mountain slopes.',
+              sc: 'Expansive green grasslands stretching toward mist-veiled blue mountain slopes.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-21.webp'
+          },
+          {
+            id: 59,
+            title: 'Koi Beneath the Jade Surface',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'KYOTO, JAPAN',
+            coords: '35.0116° N, 135.7681° E',
+            description: {
+              en: 'Vibrant orange and white carp gliding through a sunlit garden pond.',
+              tc: 'Vibrant orange and white carp gliding through a sunlit garden pond.',
+              sc: 'Vibrant orange and white carp gliding through a sunlit garden pond.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-22.webp'
+          },
+          {
+            id: 60,
+            title: 'Antelopes in the Tall Grass',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'EAST AFRICA',
+            coords: '2.3333° S, 34.8333° E',
+            description: {
+              en: 'Two gazelles pausing alertly amidst dry golden woodland scrub.',
+              tc: 'Two gazelles pausing alertly amidst dry golden woodland scrub.',
+              sc: 'Two gazelles pausing alertly amidst dry golden woodland scrub.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-23.webp'
+          },
+          {
+            id: 61,
+            title: 'Lone Tree in the Mustard Fields',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'LUOPING, YUNNAN',
+            coords: '24.8842° N, 104.3086° E',
+            description: {
+              en: 'A tall green tree rising from a sea of bright yellow blossoms under clear skies.',
+              tc: 'A tall green tree rising from a sea of bright yellow blossoms under clear skies.',
+              sc: 'A tall green tree rising from a sea of bright yellow blossoms under clear skies.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-24.webp'
+          },
+          {
+            id: 62,
+            title: 'Stillness on the Woodland River',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'AMAZON RAINFOREST',
+            coords: '3.4653° S, 62.2159° W',
+            description: {
+              en: 'Overhanging green boughs mirrored cleanly in dark, glass-calm river waters.',
+              tc: 'Overhanging green boughs mirrored cleanly in dark, glass-calm river waters.',
+              sc: 'Overhanging green boughs mirrored cleanly in dark, glass-calm river waters.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-25.webp'
+          },
+          {
+            id: 63,
+            title: 'Tapestry of Summer Blooms',
+            vol: { en: 'Forests', tc: '森林秘境', sc: '森林秘境' },
+            categoryId: 'forests',
+            location: 'WICKLOW, IRELAND',
+            coords: '52.9808° N, 6.0446° W',
+            description: {
+              en: 'Magenta, coral, and golden flowers woven together in a sunlit garden border.',
+              tc: 'Magenta, coral, and golden flowers woven together in a sunlit garden border.',
+              sc: 'Magenta, coral, and golden flowers woven together in a sunlit garden border.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Forests-26.webp'
+          },
+
+          // Mountains (64 - 85 -> Mountains-1 to Mountains-22)
+          {
+            id: 64,
+            title: 'Sacred Cone Through the Veil',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'RUSSIA',
+            coords: '55.7558° N, 37.6173° E',
+            description: {
+              en: 'A symmetrical volcanic peak emerging faintly above a sea of morning clouds.',
+              tc: 'A symmetrical volcanic peak emerging faintly above a sea of morning clouds.',
+              sc: 'A symmetrical volcanic peak emerging faintly above a sea of morning clouds.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-1.webp'
+          },
+          {
+            id: 65,
+            title: 'Prayer Flags Over Yamdrok Lake',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'YAMDROK LAKE, TIBET',
+            coords: '28.9333° N, 90.7167° E',
+            description: {
+              en: 'Colorful Tibetan prayer flags fluttering above turquoise highland waters.',
+              tc: 'Colorful Tibetan prayer flags fluttering above turquoise highland waters.',
+              sc: 'Colorful Tibetan prayer flags fluttering above turquoise highland waters.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-2.webp'
+          },
+          {
+            id: 66,
+            title: 'Red Buttes of the High Desert',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'MONUMENT VALLEY, UTAH',
+            coords: '36.9980° N, 110.0985° W',
+            description: {
+              en: 'Weathered sandstone mesas stretching across a vast ochre horizon.',
+              tc: 'Weathered sandstone mesas stretching across a vast ochre horizon.',
+              sc: 'Weathered sandstone mesas stretching across a vast ochre horizon.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-3.webp'
+          },
+          {
+            id: 67,
+            title: 'Layered Silhouettes at Dawn',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'HUANGSHAN, ANHUI',
+            coords: '30.1375° N, 118.1650° E',
+            description: {
+              en: 'Blue mountain ridges fading softly into warm amber twilight skies.',
+              tc: 'Blue mountain ridges fading softly into warm amber twilight skies.',
+              sc: 'Blue mountain ridges fading softly into warm amber twilight skies.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-4.webp'
+          },
+          {
+            id: 68,
+            title: 'Storm Clouds Over the Plateau',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'TORRES DEL PAINE, CHILE',
+            coords: '50.9423° S, 73.4068° W',
+            description: {
+              en: 'Dramatic slate clouds sweeping above a golden high-altitude basin.',
+              tc: 'Dramatic slate clouds sweeping above a golden high-altitude basin.',
+              sc: 'Dramatic slate clouds sweeping above a golden high-altitude basin.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-5.webp'
+          },
+          {
+            id: 69,
+            title: 'Granite Towers Across the Sound',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'TORRES DEL PAINE, CHILE',
+            coords: '50.9423° S, 73.4068° W',
+            description: {
+              en: 'Jagged Patagonian peaks rising beyond cold blue fjord waters.',
+              tc: 'Jagged Patagonian peaks rising beyond cold blue fjord waters.',
+              sc: 'Jagged Patagonian peaks rising beyond cold blue fjord waters.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-6.webp'
+          },
+          {
+            id: 70,
+            title: 'Crimson Rose Before Snow Peaks',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'TIBET, CHINA',
+            coords: '29.6500° N, 91.1000° E',
+            description: {
+              en: 'A single red blossom blooming against distant white-capped ridges and cobalt sky.',
+              tc: 'A single red blossom blooming against distant white-capped ridges and cobalt sky.',
+              sc: 'A single red blossom blooming against distant white-capped ridges and cobalt sky.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-7.webp'
+          },
+          {
+            id: 71,
+            title: 'Snow-Dusted Range Above the Bay',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'ALASKA, UNITED STATES',
+            coords: '60.7746° N, 148.6869° W',
+            description: {
+              en: 'Crisp white mountain flanks mirrored across a tranquil sub-arctic inlet.',
+              tc: 'Crisp white mountain flanks mirrored across a tranquil sub-arctic inlet.',
+              sc: 'Crisp white mountain flanks mirrored across a tranquil sub-arctic inlet.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-8.webp'
+          },
+          {
+            id: 72,
+            title: 'Gateway Through the Polar Fjord',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'LEMAIRE CHANNEL, ANTARCTICA',
+            coords: '65.0833° S, 63.9500° W',
+            description: {
+              en: 'Steep snow-streaked cliffs framing a narrow glacial channel.',
+              tc: 'Steep snow-streaked cliffs framing a narrow glacial channel.',
+              sc: 'Steep snow-streaked cliffs framing a narrow glacial channel.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-9.webp'
+          },
+          {
+            id: 73,
+            title: 'Sunbeams Through Alpine Ridges',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'TIBET, CHINA',
+            coords: '29.6500° N, 91.1000° E',
+            description: {
+              en: 'Slanted light piercing deep valleys across rugged mountain folds.',
+              tc: 'Slanted light piercing deep valleys across rugged mountain folds.',
+              sc: 'Slanted light piercing deep valleys across rugged mountain folds.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-10.webp'
+          },
+          {
+            id: 74,
+            title: 'Craggy Peaks Above Cloud Sea',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'TIBET, CHINA',
+            coords: '29.6500° N, 91.1000° E',
+            description: {
+              en: 'Sharp rocky summits rising through drifting morning clouds from an elevated vantage.',
+              tc: 'Sharp rocky summits rising through drifting morning clouds from an elevated vantage.',
+              sc: 'Sharp rocky summits rising through drifting morning clouds from an elevated vantage.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-11.webp'
+          },
+          {
+            id: 75,
+            title: 'Golden Glow Over Canyon Walls',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'GRAND CANYON, ARIZONA',
+            coords: '36.0544° N, 112.1401° W',
+            description: {
+              en: 'Warm late light igniting stratified sandstone ridges and deep gorges.',
+              tc: 'Warm late light igniting stratified sandstone ridges and deep gorges.',
+              sc: 'Warm late light igniting stratified sandstone ridges and deep gorges.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-12.webp'
+          },
+          {
+            id: 76,
+            title: 'Glacial Basin Under Snow Peaks',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'LAKE LOUISE, ALBERTA',
+            coords: '51.4254° N, 116.1773° W',
+            description: {
+              en: 'Milky turquoise waters nestled beneath steep rocky walls and snowfields.',
+              tc: 'Milky turquoise waters nestled beneath steep rocky walls and snowfields.',
+              sc: 'Milky turquoise waters nestled beneath steep rocky walls and snowfields.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-13.webp'
+          },
+          {
+            id: 77,
+            title: 'Twilight Across Red Rock Gorge',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'GRAND CANYON, ARIZONA',
+            coords: '36.0544° N, 112.1401° W',
+            description: {
+              en: 'Violet shadows and warm amber cliffs stretching along a winding desert canyon.',
+              tc: 'Violet shadows and warm amber cliffs stretching along a winding desert canyon.',
+              sc: 'Violet shadows and warm amber cliffs stretching along a winding desert canyon.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-14.webp'
+          },
+          {
+            id: 78,
+            title: 'Rain Curtain Over Distant Hills',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'QUEENSTOWN, NEW ZEALAND',
+            coords: '45.0312° S, 168.6626° E',
+            description: {
+              en: 'Heavy storm clouds trailing showers across low coastal ridges and dark water.',
+              tc: 'Heavy storm clouds trailing showers across low coastal ridges and dark water.',
+              sc: 'Heavy storm clouds trailing showers across low coastal ridges and dark water.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-15.webp'
+          },
+          {
+            id: 79,
+            title: 'Highland Tarns in Summer Light',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'LAKE DISTRICT, ENGLAND',
+            coords: '54.4609° N, 3.0886° W',
+            description: {
+              en: 'Small mountain lakes dotting green upland terrain under soft daylight.',
+              tc: 'Small mountain lakes dotting green upland terrain under soft daylight.',
+              sc: 'Small mountain lakes dotting green upland terrain under soft daylight.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-16.webp'
+          },
+          {
+            id: 80,
+            title: 'Lone Observer by the Alpine Lake',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'EAST AFRICA',
+            coords: '2.3333° S, 34.8333° E',
+            description: {
+              en: 'A solitary figure standing beside still sapphire waters beneath clear mountain skies.',
+              tc: 'A solitary figure standing beside still sapphire waters beneath clear mountain skies.',
+              sc: 'A solitary figure standing beside still sapphire waters beneath clear mountain skies.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-17.webp'
+          },
+          {
+            id: 81,
+            title: 'Warm Mist in the Canyon Pass',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'HUANGSHAN, ANHUI',
+            coords: '30.1375° N, 118.1650° E',
+            description: {
+              en: 'Soft golden haze drifting between steep rocky slopes and autumn foliage.',
+              tc: 'Soft golden haze drifting between steep rocky slopes and autumn foliage.',
+              sc: 'Soft golden haze drifting between steep rocky slopes and autumn foliage.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-18.webp'
+          },
+          {
+            id: 82,
+            title: 'Stillness Beneath Arid Ridges',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'TIBET, CHINA',
+            coords: '29.6500° N, 91.1000° E',
+            description: {
+              en: 'Barren mountain slopes reflected calmly in deep blue alpine waters.',
+              tc: 'Barren mountain slopes reflected calmly in deep blue alpine waters.',
+              sc: 'Barren mountain slopes reflected calmly in deep blue alpine waters.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-19.webp'
+          },
+          {
+            id: 83,
+            title: 'Broad Horizon of the Range',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'TIANSHAN, XINJIANG',
+            coords: '42.0000° N, 81.0000° E',
+            description: {
+              en: 'A sweeping mountain chain rising across a calm valley floor under pale skies.',
+              tc: 'A sweeping mountain chain rising across a calm valley floor under pale skies.',
+              sc: 'A sweeping mountain chain rising across a calm valley floor under pale skies.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-20.webp'
+          },
+          {
+            id: 84,
+            title: 'Mist Merging Sky and Water',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'ERHAI LAKE, YUNNAN',
+            coords: '25.7867° N, 100.1847° E',
+            description: {
+              en: 'A quiet expanse where pale fog softens distant shorelines into silver light.',
+              tc: 'A quiet expanse where pale fog softens distant shorelines into silver light.',
+              sc: 'A quiet expanse where pale fog softens distant shorelines into silver light.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-21.webp'
+          },
+          {
+            id: 85,
+            title: 'Highland Lake in Golden Grass',
+            vol: { en: 'Mountains', tc: '山川湖泊', sc: '山川湖泊' },
+            categoryId: 'mountains',
+            location: 'NAMTSO, TIBET',
+            coords: '30.7333° N, 90.5667° E',
+            description: {
+              en: 'Deep blue water bordered by sun-warmed slopes beneath crisp mountain air.',
+              tc: 'Deep blue water bordered by sun-warmed slopes beneath crisp mountain air.',
+              sc: 'Deep blue water bordered by sun-warmed slopes beneath crisp mountain air.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Mountains-22.webp'
+          },
+
+          // Sunsets (86 - 100 -> Sunsets-1 to Sunsets-15)
+          {
+            id: 86,
+            title: 'Pale Rainbow Over Open Sea',
+            vol: { en: 'Sunsets', tc: '日落餘暉', sc: '日落余晖' },
+            categoryId: 'sunsets',
+            location: 'RUSSIA',
+            coords: '55.7558° N, 37.6173° E',
+            description: {
+              en: 'A faint arc of light descending toward dark ocean swells beneath scattered clouds.',
+              tc: 'A faint arc of light descending toward dark ocean swells beneath scattered clouds.',
+              sc: 'A faint arc of light descending toward dark ocean swells beneath scattered clouds.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Sunsets-1.webp'
+          },
+          {
+            id: 87,
+            title: 'Caravan Along the Blazing Ridge',
+            vol: { en: 'Sunsets', tc: '日落餘暉', sc: '日落余晖' },
+            categoryId: 'sunsets',
+            location: 'MERZOUGA, MOROCCO',
+            coords: '31.0801° N, 4.0133° W',
+            description: {
+              en: 'Camels silhouetted along a crest of sand against a fiery sunset sky.',
+              tc: 'Camels silhouetted along a crest of sand against a fiery sunset sky.',
+              sc: 'Camels silhouetted along a crest of sand against a fiery sunset sky.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Sunsets-2.webp'
+          },
+          {
+            id: 88,
+            title: 'Amber Sun Over the Bay',
+            vol: { en: 'Sunsets', tc: '日落餘暉', sc: '日落余晖' },
+            categoryId: 'sunsets',
+            location: 'DONOSTIA-SAN SEBASTIÁN, SPAIN',
+            coords: '43.3183° N, 1.9812° W',
+            description: {
+              en: 'A low sun dipping behind dark headlands, casting a shimmering path across water.',
+              tc: 'A low sun dipping behind dark headlands, casting a shimmering path across water.',
+              sc: 'A low sun dipping behind dark headlands, casting a shimmering path across water.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Sunsets-3.webp'
+          },
+          {
+            id: 89,
+            title: 'Dune Silhouettes at Dusk',
+            vol: { en: 'Sunsets', tc: '日落餘暉', sc: '日落余晖' },
+            categoryId: 'sunsets',
+            location: 'ERG CHEBBI, MOROCCO',
+            coords: '31.1494° N, 3.9756° W',
+            description: {
+              en: 'Camels crossing sunlit sand ridges as evening shadows lengthen across the desert.',
+              tc: 'Camels crossing sunlit sand ridges as evening shadows lengthen across the desert.',
+              sc: 'Camels crossing sunlit sand ridges as evening shadows lengthen across the desert.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Sunsets-4.webp'
+          },
+          {
+            id: 90,
+            title: 'Walking the Saffron Sands',
+            vol: { en: 'Sunsets', tc: '日落餘暉', sc: '日落余晖' },
+            categoryId: 'sunsets',
+            location: 'ERG CHEBBI, MOROCCO',
+            coords: '31.1494° N, 3.9756° W',
+            description: {
+              en: 'A solitary traveler ascending bright orange dunes under late afternoon light.',
+              tc: 'A solitary traveler ascending bright orange dunes under late afternoon light.',
+              sc: 'A solitary traveler ascending bright orange dunes under late afternoon light.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Sunsets-5.webp'
+          },
+          {
+            id: 91,
+            title: 'Golden Reeds by Calm Water',
+            vol: { en: 'Sunsets', tc: '日落餘暉', sc: '日落余晖' },
+            categoryId: 'sunsets',
+            location: 'AMAZON RAINFOREST',
+            coords: '3.4653° S, 62.2159° W',
+            description: {
+              en: 'Warm dusk light glinting across quiet marshland and gentle reflections.',
+              tc: 'Warm dusk light glinting across quiet marshland and gentle reflections.',
+              sc: 'Warm dusk light glinting across quiet marshland and gentle reflections.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Sunsets-6.webp'
+          },
+          {
+            id: 92,
+            title: 'Evening March Across the Sands',
+            vol: { en: 'Sunsets', tc: '日落餘暉', sc: '日落余晖' },
+            categoryId: 'sunsets',
+            location: 'SAHARA DESERT, MOROCCO',
+            coords: '31.0801° N, 4.0133° W',
+            description: {
+              en: 'A line of camels moving steadily in silhouette against fading twilight.',
+              tc: 'A line of camels moving steadily in silhouette against fading twilight.',
+              sc: 'A line of camels moving steadily in silhouette against fading twilight.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Sunsets-7.webp'
+          },
+          {
+            id: 93,
+            title: 'Soft Sun Over Still Waters',
+            vol: { en: 'Sunsets', tc: '日落餘暉', sc: '日落余晖' },
+            categoryId: 'sunsets',
+            location: 'WEST LAKE, ZHEJIANG',
+            coords: '30.2424° N, 120.1500° E',
+            description: {
+              en: 'A hazy golden disc hovering above a tranquil mirror-like lake.',
+              tc: 'A hazy golden disc hovering above a tranquil mirror-like lake.',
+              sc: 'A hazy golden disc hovering above a tranquil mirror-like lake.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Sunsets-8.webp'
+          },
+          {
+            id: 94,
+            title: 'Stone Path Through Green Foliage',
+            vol: { en: 'Sunsets', tc: '日落餘暉', sc: '日落余晖' },
+            categoryId: 'sunsets',
+            location: 'DINAN, FRANCE',
+            coords: '48.4547° N, 2.0497° W',
+            description: {
+              en: 'A quiet garden walkway bordered by lush greenery and dappled light.',
+              tc: 'A quiet garden walkway bordered by lush greenery and dappled light.',
+              sc: 'A quiet garden walkway bordered by lush greenery and dappled light.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Sunsets-9.webp'
+          },
+          {
+            id: 95,
+            title: 'Sunlit Cliff Against Azure Sky',
+            vol: { en: 'Sunsets', tc: '日落餘暉', sc: '日落余晖' },
+            categoryId: 'sunsets',
+            location: 'DANXIA, GUANGDONG',
+            coords: '25.0200° N, 113.7333° E',
+            description: {
+              en: 'Warm light catching a sheer rock face beneath an unbroken blue sky.',
+              tc: 'Warm light catching a sheer rock face beneath an unbroken blue sky.',
+              sc: 'Warm light catching a sheer rock face beneath an unbroken blue sky.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Sunsets-10.webp'
+          },
+          {
+            id: 96,
+            title: 'Blossom Branch at Dusk',
+            vol: { en: 'Sunsets', tc: '日落餘暉', sc: '日落余晖' },
+            categoryId: 'sunsets',
+            location: 'ERHAI LAKE, YUNNAN',
+            coords: '25.7867° N, 100.1847° E',
+            description: {
+              en: 'Delicate flowering branches silhouetted gently against twilight water.',
+              tc: 'Delicate flowering branches silhouetted gently against twilight water.',
+              sc: 'Delicate flowering branches silhouetted gently against twilight water.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Sunsets-11.webp'
+          },
+          {
+            id: 97,
+            title: 'Ruins Framed in Golden Light',
+            vol: { en: 'Sunsets', tc: '日落餘暉', sc: '日落余晖' },
+            categoryId: 'sunsets',
+            location: 'PERSEPOLIS, IRAN',
+            coords: '29.9352° N, 52.8914° E',
+            description: {
+              en: 'Ancient stone columns bathed in warm sunset glow against evening clouds.',
+              tc: 'Ancient stone columns bathed in warm sunset glow against evening clouds.',
+              sc: 'Ancient stone columns bathed in warm sunset glow against evening clouds.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Sunsets-12.webp'
+          },
+          {
+            id: 98,
+            title: 'Twin Figures in the Golden Surf',
+            vol: { en: 'Sunsets', tc: '日落餘暉', sc: '日落余晖' },
+            categoryId: 'sunsets',
+            location: 'KO YAO, PHANG NGA',
+            coords: '8.1117° N, 98.5908° E',
+            description: {
+              en: 'Two silhouettes standing in glowing shallow waves beneath a low sun.',
+              tc: 'Two silhouettes standing in glowing shallow waves beneath a low sun.',
+              sc: 'Two silhouettes standing in glowing shallow waves beneath a low sun.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Sunsets-13.webp'
+          },
+          {
+            id: 99,
+            title: 'Double Arc Amidst Storm Clouds',
+            vol: { en: 'Sunsets', tc: '日落餘暉', sc: '日落余晖' },
+            categoryId: 'sunsets',
+            location: 'ICELAND',
+            coords: '64.9631° N, 19.0208° W',
+            description: {
+              en: 'Vivid bands of rainbow light curving over dark evening clouds.',
+              tc: 'Vivid bands of rainbow light curving over dark evening clouds.',
+              sc: 'Vivid bands of rainbow light curving over dark evening clouds.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Sunsets-14.webp'
+          },
+          {
+            id: 100,
+            title: 'Distant Boats in Silver Mist',
+            vol: { en: 'Sunsets', tc: '日落餘暉', sc: '日落余晖' },
+            categoryId: 'sunsets',
+            location: 'GUILIN, GUANGXI',
+            coords: '25.2736° N, 110.2900° E',
+            description: {
+              en: 'Small vessels resting quietly on calm water beneath overhanging boughs.',
+              tc: 'Small vessels resting quietly on calm water beneath overhanging boughs.',
+              sc: 'Small vessels resting quietly on calm water beneath overhanging boughs.'
+            },
+            url: 'https://noreg714.github.io/my-photo-album/images/Sunsets-15.webp'
+          }
+        ],
+
+        get filteredPhotos() {
+          if (this.activeCategory === 'all') return this.photos;
+          return this.photos.filter(p => p.categoryId === this.activeCategory);
+        },
+
+        get effectiveCols() {
+          if (this.viewportWidth <= 480) return 1;
+          if (this.viewportWidth <= 768) return 2;
+          return this.gridCols;
+        },
+
+        get masonryColumns() {
+          const colsCount = this.effectiveCols;
+          const cols = Array.from({ length: colsCount }, () => []);
+          this.filteredPhotos.forEach((photo, idx) => {
+            cols[idx % colsCount].push(photo);
+          });
+          return cols;
+        },
+
+        shuffleArray(list) {
+          const arr = [...list];
+          for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+          }
+          return arr;
+        },
+
+        initLoadingSequence() {
+          this.loadProgress = 28;
+          const initialBatch = this.photos.slice(0, 12);
+          let settled = 0;
+
+          const finishLoading = () => {
+            if (this.galleryReady) return;
+            this.loadProgress = 100;
+            setTimeout(() => {
+              this.galleryReady = true;
+            }, 220);
+          };
+
+          const onOneSettled = () => {
+            settled += 1;
+            const ratio = Math.min(92, 28 + Math.round((settled / initialBatch.length) * 64));
+            if (ratio > this.loadProgress) this.loadProgress = ratio;
+            if (settled >= initialBatch.length) finishLoading();
+          };
+
+          initialBatch.forEach((photo) => {
+            const img = new Image();
+            img.decoding = 'async';
+            img.onload = () => {
+              if (img.decode) {
+                img.decode().catch(() => {}).finally(onOneSettled);
+              } else {
+                onOneSettled();
+              }
+            };
+            img.onerror = onOneSettled;
+            img.src = photo.url;
+          });
+
+          window.addEventListener('load', () => {
+            this.loadProgress = Math.max(this.loadProgress, 85);
+            setTimeout(finishLoading, 250);
+          }, { once: true });
+
+          setTimeout(finishLoading, 1800);
+        },
+
+        initApp() {
+          this.photos = this.shuffleArray(this.photos);
+          this.currentLang = currentLang;
+          this.initLoadingSequence();
+
+          window.addEventListener('resize', () => {
+            this.viewportWidth = window.innerWidth;
+            this.$nextTick(() => lucide.createIcons());
+          });
+
+          window.addEventListener('language-changed', (e) => {
+            this.currentLang = e.detail.lang;
+            this.$nextTick(() => lucide.createIcons());
+          });
+
+          this.$nextTick(() => lucide.createIcons());
+          this.$watch('activeCategory', () => {
+            this.$nextTick(() => lucide.createIcons());
+          });
+          this.$watch('gridCols', () => {
+            this.$nextTick(() => lucide.createIcons());
+          });
+        },
+
+        openLightbox(photo) {
+          this.currentPhoto = photo;
+          this.currentPhotoIndex = this.filteredPhotos.findIndex(p => p.id === photo.id);
+          this.lightboxOpen = true;
+          document.body.style.overflow = 'hidden';
+          this.$nextTick(() => lucide.createIcons());
+        },
+
+        closeLightbox() {
+          this.lightboxOpen = false;
+          document.body.style.overflow = 'auto';
+        },
+
+        nextPhoto() {
+          if (this.filteredPhotos.length === 0) return;
+          this.currentPhotoIndex = (this.currentPhotoIndex + 1) % this.filteredPhotos.length;
+          this.currentPhoto = this.filteredPhotos[this.currentPhotoIndex];
+        },
+
+        prevPhoto() {
+          if (this.filteredPhotos.length === 0) return;
+          this.currentPhotoIndex = (this.currentPhotoIndex - 1 + this.filteredPhotos.length) % this.filteredPhotos.length;
+          this.currentPhoto = this.filteredPhotos[this.currentPhotoIndex];
+        }
+      }
+    }
+
+    // Theme Toggle Logic (Black <-> White mode)
+    function toggleTheme() {
+      const htmlElement = document.documentElement;
+      const sunIcon = document.getElementById('sun-icon');
+      const moonIcon = document.getElementById('moon-icon');
+      const mobThemeDark = document.getElementById('mob-theme-dark');
+      const mobThemeLight = document.getElementById('mob-theme-light');
+
+      htmlElement.classList.toggle('light');
+      const isLight = htmlElement.classList.contains('light');
+
+      if (sunIcon && moonIcon) {
+        if (isLight) {
+          sunIcon.classList.remove('hidden');
+          sunIcon.classList.add('block');
+          moonIcon.classList.remove('block');
+          moonIcon.classList.add('hidden');
+        } else {
+          sunIcon.classList.remove('block');
+          sunIcon.classList.add('hidden');
+          moonIcon.classList.remove('hidden');
+          moonIcon.classList.add('block');
+        }
+      }
+
+      if (mobThemeDark && mobThemeLight) {
+        if (isLight) {
+          mobThemeDark.classList.add('hidden');
+          mobThemeLight.classList.remove('hidden');
+        } else {
+          mobThemeDark.classList.remove('hidden');
+          mobThemeLight.classList.add('hidden');
+        }
+      }
+
+      lucide.createIcons();
+    }
+
+    // Mobile Menu Toggle Logic
+    function toggleMobileMenu() {
+      const mobileMenu = document.getElementById('mobile-menu');
+      const menuIcon = document.getElementById('menu-icon');
+      const closeIcon = document.getElementById('close-icon');
+
+      const isOpen = mobileMenu.classList.contains('opacity-100');
+
+      if (isOpen) {
+        mobileMenu.classList.remove('opacity-100', 'pointer-events-auto');
+        mobileMenu.classList.add('opacity-0', 'pointer-events-none');
+        menuIcon.classList.remove('hidden');
+        menuIcon.classList.add('block');
+        closeIcon.classList.remove('block');
+        closeIcon.classList.add('hidden');
+        document.body.style.overflow = '';
+      } else {
+        mobileMenu.classList.remove('opacity-0', 'pointer-events-none');
+        mobileMenu.classList.add('opacity-100', 'pointer-events-auto');
+        menuIcon.classList.remove('block');
+        menuIcon.classList.add('hidden');
+        closeIcon.classList.remove('hidden');
+        closeIcon.classList.add('block');
+        document.body.style.overflow = 'hidden';
+      }
+      lucide.createIcons();
+    }
+
+    // EN / 繁 / 簡 Translation Dictionary & Logic
+    const translations = {
+      en: {
+        "brand-name": "MaxMa Collection",
+        "edition-badge": "EDITION 2026",
+        "nav-home": "Home",
+        "nav-gallery": "Gallery",
+        "nav-perspectives": "Photobooks",
+        "nav-exhibition": "Virtual Space",
+        "theme-dark": "DARK MODE",
+        "theme-light": "LIGHT MODE",
+        "loading-text": "LOADING...",
+        "empty-gallery": "NO PHOTOGRAPHS FOUND IN THIS CATEGORY.",
+        "location-coords-label": "LOCATION & COORDINATES",
+        "lightbox-hint": "USE ARROW KEYS OR BUTTONS TO NAVIGATE • ESC TO CLOSE",
+        "footer-rights": "© 2026 MAX MA PHOTO COLLECTION. ALL RIGHTS RESERVED."
+      },
+      tc: {
+        "brand-name": "MaxMa Collection",
+        "edition-badge": "EDITION 2026",
+        "nav-home": "首頁",
+        "nav-gallery": "光影藝廊",
+        "nav-perspectives": "攝影集",
+        "nav-exhibition": "虛擬展廳",
+        "theme-dark": "深色模式",
+        "theme-light": "淺色模式",
+        "loading-text": "載入中...",
+        "empty-gallery": "此分類目前沒有相片。",
+        "location-coords-label": "拍攝地點與座標",
+        "lightbox-hint": "使用方向鍵或按鈕切換 • 按 ESC 關閉",
+        "footer-rights": "© 2026 MAX MA 攝影典藏集．版權所有。"
+      }
+    };
+
+    function setLanguage(lang) {
+      currentLang = lang;
+      document.documentElement.lang = lang === 'en' ? 'en' : (lang === 'sc' ? 'zh-CN' : 'zh-HK');
+
+      const btnEn = document.getElementById('lang-en');
+      const btnTc = document.getElementById('lang-tc');
+      const btnSc = document.getElementById('lang-sc');
+
+      const mobBtnEn = document.getElementById('mob-lang-en');
+      const mobBtnTc = document.getElementById('mob-lang-tc');
+      const mobBtnSc = document.getElementById('mob-lang-sc');
+
+      [btnEn, btnTc, btnSc, mobBtnEn, mobBtnTc, mobBtnSc].forEach(b => {
+        if (b) b.className = "hover:text-white [.light_&]:hover:text-black transition-colors";
+      });
+
+      if (lang === 'en') {
+        if (btnEn) btnEn.className = "text-white [.light_&]:text-black font-medium transition-colors";
+        if (mobBtnEn) mobBtnEn.className = "text-white [.light_&]:text-black font-medium transition-colors";
+        applyTranslations(translations.en);
+      } else if (lang === 'tc') {
+        if (btnTc) btnTc.className = "text-white [.light_&]:text-black font-medium transition-colors";
+        if (mobBtnTc) mobBtnTc.className = "text-white [.light_&]:text-black font-medium transition-colors";
+        applyTranslations(translations.tc);
+      } else if (lang === 'sc') {
+        if (btnSc) btnSc.className = "text-white [.light_&]:text-black font-medium transition-colors";
+        if (mobBtnSc) mobBtnSc.className = "text-white [.light_&]:text-black font-medium transition-colors";
+
+        const converter = OpenCC.Converter({ from: 'hk', to: 'cn' });
+        const scDict = {};
+        for (let key in translations.tc) {
+          scDict[key] = converter(translations.tc[key]);
+        }
+        applyTranslations(scDict);
+      }
+
+      window.dispatchEvent(new CustomEvent('language-changed', { detail: { lang } }));
+    }
+
+    function applyTranslations(dict) {
+      const elements = document.querySelectorAll('[data-i18n]');
+      elements.forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (dict[key]) {
+          el.innerHTML = dict[key];
+        }
+      });
+    }
+
+    // Initialize icons and default English language on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      setLanguage('en');
+    });
+  </script>
+</body>
+</html>
